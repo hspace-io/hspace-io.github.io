@@ -1,5 +1,3 @@
-# 최종본
-
 ***By Knights of the SPACE 가세혁(dpp), 김다희(lxnee), 박진완(realsung), 정성훈(HunSec)***
 
 # **BackGround**
@@ -214,7 +212,7 @@ Prototype Pollution을 실질적으로 활용하려면 **Prototype에 접근하�
 
 관련 내용을 소개한 바 있습니다.
 
-[https://x.com/arkark_/status/1943260773268230205](https://x.com/arkark_/status/1943260773268230205)
+https://x.com/arkark_/status/1943260773268230205
 
 위와 같이 **7가지 방법**으로 `prototype`에 접근할 수 있습니다.
 
@@ -290,7 +288,7 @@ app.listen(PORT, () => {
 `process.mainModule.require("child_process").execSync("dir").toString()` 구문을 통해 
 서버에서 명령어가 실행되고, 결과가 출력됩니다.
 
-![image.png](image.png)
+![image.png](attachment:841c5959-cdc2-45f0-8c92-4fde0a81f2a1:image.png)
 
 ---
 
@@ -353,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
 [http://34.134.162.213:17002/?__proto__[a]=1](http://34.134.162.213:17002/?__proto__[a]=1) 해당 링크를 통해서 PP를 확인할 수 있습니다.
  
 
-![image.png](image%201.png)
+![image.png](attachment:96fbd3b9-f972-4308-a9c8-7f41b80807bc:image.png)
 
 ### sanitize-html 우회
 
@@ -362,9 +360,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 `sanitizeHtml prototype pollution` 을 검색하면 [유용한 링크](https://www.securitum.com/prototype-pollution-and-bypassing-client-side-html-sanitizers.html)가 나옵니다.
 
-![image.png](image%202.png)
+![image.png](attachment:c2b99f87-a39d-4108-91bf-085bfc838a09:image.png)
 
-![image.png](image%203.png)
+![image.png](attachment:3bc943e2-6a1c-4e99-ba98-e23d89345ada:image.png)
 
 따라서 아래와 같이 접근하여 문제를 해결할 수 있습니다.
 
@@ -378,13 +376,13 @@ http://127.0.0.1:5000/?note=%3Ciframe%20onload=eval(atob(%22BASE64 인코딩된 
 
 ### 관련 워게임
 
-[https://dreamhack.io/wargame/challenges/205/](https://dreamhack.io/wargame/challenges/205/)
+https://dreamhack.io/wargame/challenges/205/
 
-[https://dreamhack.io/wargame/challenges/468/](https://dreamhack.io/wargame/challenges/468/)
+https://dreamhack.io/wargame/challenges/468/
 
-[https://dreamhack.io/wargame/challenges/643/](https://dreamhack.io/wargame/challenges/643/)
+https://dreamhack.io/wargame/challenges/643/
 
-[https://dreamhack.io/wargame/challenges/1678](https://dreamhack.io/wargame/challenges/1678)
+https://dreamhack.io/wargame/challenges/1678
 
 ---
 
@@ -849,13 +847,13 @@ console.log({}["/notauth"]["Slonser"]); // polluted
 > https://security.snyk.io/vuln/SNYK-DEBIANUNSTABLE-NODETOUGHCOOKIE-5759359
 > 
 > 
-> [https://www.cve.org/CVERecord?id=CVE-2023-26136](https://www.cve.org/CVERecord?id=CVE-2023-26136)
+> https://www.cve.org/CVERecord?id=CVE-2023-26136
 > 
 > https://nvd.nist.gov/vuln/detail/cve-2023-26136
 > 
 > https://security.snyk.io/vuln/SNYK-JS-TOUGHCOOKIE-5672873
 > 
-> [https://github.com/salesforce/tough-cookie/issues/282](https://github.com/salesforce/tough-cookie/issues/282)
+> https://github.com/salesforce/tough-cookie/issues/282
 > 
 
 ---
@@ -1098,5 +1096,5 @@ POST /unicorn/message/todo HTTP/1.1
 > 
 > https://security.snyk.io/vuln/SNYK-PYTHON-DJANGOUNICORN-8685541
 > 
-> [https://github.com/advisories/GHSA-g9wf-5777-gq43](https://github.com/advisories/GHSA-g9wf-5777-gq43)
+> https://github.com/advisories/GHSA-g9wf-5777-gq43
 >
