@@ -1,3 +1,15 @@
+---
+title: P
+description: Python 환경에서의 Prototype Pollution,Prototype pollution이란
+author: 가세혁(dpp), 김다희(lxnee), 박진완(realsung), 정성훈(HunSec)
+date: 
+tags: [Web]
+categories: [Web,Server Side]
+comments: false
+math: true
+pin: false
+image: /assets/img/
+---
 ***By Knights of the SPACE 가세혁(dpp), 김다희(lxnee), 박진완(realsung), 정성훈(HunSec)***
 
 # **BackGround**
