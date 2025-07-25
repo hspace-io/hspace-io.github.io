@@ -4,7 +4,7 @@ description: Python 환경에서의 Prototype Pollution,Prototype pollution이�
 author: 가세혁(dpp), 김다희(lxnee), 박진완(realsung), 정성훈(HunSec)
 date: 
 tags: [Web]
-categories: [Web,Server Side]
+categories: [Web,Server Side,Client Side]
 comments: false
 math: true
 pin: false
