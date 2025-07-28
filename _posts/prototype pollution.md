@@ -300,7 +300,7 @@ app.listen(PORT, () => {
 `process.mainModule.require("child_process").execSync("dir").toString()` 구문을 통해 
 서버에서 명령어가 실행되고, 결과가 출력됩니다.
 
-![image.png](image.png)
+![exploit demo](https://raw.githubusercontent.com/apple6342/hspace-io.github.io/main/assets/img/proto/image.png)
 
 ---
 
