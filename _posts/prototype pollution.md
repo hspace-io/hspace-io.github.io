@@ -300,7 +300,7 @@ app.listen(PORT, () => {
 `process.mainModule.require("child_process").execSync("dir").toString()` 구문을 통해 
 서버에서 명령어가 실행되고, 결과가 출력됩니다.
 
-![exploit demo](https://raw.githubusercontent.com/apple6342/hspace-io.github.io/main/assets/img/proto/image.png)
+![demo](https://raw.githubusercontent.com/apple6342/hspace-io.github.io/main/assets/img/proto/1.png)
 
 ---
 
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
 [http://34.134.162.213:17002/?__proto__[a]=1](http://34.134.162.213:17002/?__proto__[a]=1) 해당 링크를 통해서 PP를 확인할 수 있습니다.
  
 
-![image.png](image%201.png)
+![demo](https://raw.githubusercontent.com/apple6342/hspace-io.github.io/main/assets/img/proto/2.png)
 
 ### sanitize-html 우회
 
@@ -372,9 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 `sanitizeHtml prototype pollution` 을 검색하면 [유용한 링크](https://www.securitum.com/prototype-pollution-and-bypassing-client-side-html-sanitizers.html)가 나옵니다.
 
-![image.png](image%202.png)
+![demo](https://raw.githubusercontent.com/apple6342/hspace-io.github.io/main/assets/img/proto/3.png)
 
-![image.png](image%203.png)
+![demo](https://raw.githubusercontent.com/apple6342/hspace-io.github.io/main/assets/img/proto/4.png)
 
 따라서 아래와 같이 접근하여 문제를 해결할 수 있습니다.
 
