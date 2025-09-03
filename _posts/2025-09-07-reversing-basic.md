@@ -197,7 +197,7 @@ C 드라이브를 인식하므로 DRIVE_FIXED 값인 3을 반환함을 알 수 �
 
 
 
-#### **방법1: 단순 패치**
+#### **✅방법1: 단순 패치**
 ![image](/assets/img/reversing-basic/reversing10.png)
 
 책에서 제시된 크랙 방법입니다. 00401026 주소의 명령어 JE SHORT 0040103D를 JMP 0040103D 명령어로 변경하는 방법입니다.
@@ -205,7 +205,7 @@ C 드라이브를 인식하므로 DRIVE_FIXED 값인 3을 반환함을 알 수 �
 
 
 
-#### **방법2: ZF 값 변경**
+#### **✅방법2: ZF 값 변경**
 ![image](/assets/img/reversing-basic/reversing11.png)
 
 JE 분기문을 그대로 사용한다고 하면, 
@@ -217,7 +217,7 @@ JE 분기문을 그대로 사용한다고 하면,
 
 
 
-#### **방법3: EAX 값 변경**
+#### **✅방법3: EAX 값 변경**
 성공 MessageBoxA()를 출력하게 하는 EAX값으로 EAX를 변경하는 방법입니다.
 GetDriveTypeA() 함수 호출 이후의 ESI 레지스터값은 00401000이고, EAX 레지스터값은 00000003입니다.
 
