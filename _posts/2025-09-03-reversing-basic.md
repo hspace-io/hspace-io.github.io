@@ -2,7 +2,7 @@
 title: "『리버싱 핵심 원리』1부: OllyDbg를 이용한 abex' crackme #1 분석"
 description: " 여름 방학 동안『리버싱 핵심 원리』 책 1부를 읽은 후, OllyDbg를 이용한 abex' crackme #1 실습 경험을 공유합니다."
 author: hyeroro
-date: 2025-09-07 22:00:00 +0900 # YYYY-MM-DD HH:MM:SS +TZ
+date: 2025-09-03 21:00:00 +0900 # YYYY-MM-DD HH:MM:SS +TZ
 tags: [Reverse Engineering, Debugging, CrackMe, OllyDbg]   # 3~5개 소문자·공백X
 categories: [Reverse Engineering, Debugging]  # [대분류, 소분류]
 comments: false
