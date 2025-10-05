@@ -16,11 +16,11 @@ image: /assets/img/2025_spacewar5/thumbnail.jpg
 - [목차](#목차)
 - [Flag 대신 Flax?](#Flag_대신_Flax?)
 - [Insiders_Shadow](#Insiders_Shadow)
-- [Pick Me !](#Pick_Me_!)
+- [Pick_Me_!](#Pick_Me_!)
 - [Stealth_Signal](#Stealth_Signal)
 - [Can you recovery SQLite?-?](#Can you recovery SQLite?-?)
 - [Missing_Key](#Missing_Key)
-- [내 파일이... 안돼...](#내 파일이... 안돼...)
+- [내_파일이... 안돼...](#내_파일이...안돼...)
 - [HERE I AM](#HERE I AM)
 
 ## Flag_대신_Flax?
@@ -69,6 +69,64 @@ FLAG: HSPACE{z3774by73_fi13_5y573m_zz4n6}
 ![image.png](../assets/img/2025_spacewar5/Insider_Shadow/5.png)
 
 ## Pick_Me_!
+
+드론을 좋아하는 영재군이 미국에서 드론을 날리다가 경찰에게 드론을 빼앗겼습니다 ! 
+영재군은 드론을 공원에서 조종하고 착륙했지만, 경찰은 공원이 아닌, 다른 곳에 착지했다고 했습니다! 영재군의 억울한 부분을 풀기위해 드론의 마지막 위치와 어디에서 조종했는지를 찾아주세요 ! 
+
+본 문제는 드론의 위치 추적이라는 주제로 출제된 문제입니다. 드론의 실시간 위치를 추적하고, 마지막 위치를 파악한 후, 지도와 교차 분석을 통해 플레그를 얻을 수 있습니다.
+
+해당 문제에서 주어진 파일을을 분석하면, 아래와 같은 로그가 5261개 있는 것을 알 수 있습니다.
+```
+1
+00:00:00,000 --> 00:00:00,033
+<font size="28">FrameCnt: 1, DiffTime: 33ms
+2025-08-05 13:44:25.675
+[iso: 100] [shutter: 1/1600.0] [fnum: 1.7] [ev: 0.7] [color_md: default] [focal_len: 24.00] [latitude: 46.799288] [longitude: -122.275818] [rel_alt: 3.100 abs_alt: 332.705] [ct: 4790] </font>
+```
+
+이를 보면 latitude와 longitude를 통해 위치를 분석할 수 있을 것으로 보인다. 이를 파싱하여, OpenStreetMap에 표시하는 코드는 아래와 같습니다.
+```python
+import re
+import folium
+
+def parse_srt(filename):
+    coords = []
+    with open(filename, 'r', encoding='utf-8') as f:
+        for line in f:
+            lat = re.search(r'latitude:\s*([-\d.]+)', line)
+            lon = re.search(r'longitude:\s*([-\d.]+)', line)
+            if lat and lon:
+                coords.append([float(lat.group(1)), float(lon.group(1))])
+    return coords
+
+coords = parse_srt('DJI_20250805134425_0065_D.SRT')
+
+m = folium.Map(location=coords[0], zoom_start=15)
+folium.PolyLine(coords, color='red', weight=3).add_to(m)
+folium.Marker(coords[0], popup='Start', icon=folium.Icon(color='green')).add_to(m)
+folium.Marker(coords[-1], popup='End', icon=folium.Icon(color='red')).add_to(m)
+
+m.save('drone_map.html')
+print(f"Map saved: drone_map.html ({len(coords)} points)")
+```
+해당 코드를 이용하여 분석하면, 아래 사진과 같은 지도를 확인할 수 있습니다. 또한 해당 지도를 통해 영재군은, 공원에서 드론을 조종했다는 것을 알 수 있습니다. 
+![image.png](../assets/img/2025_spacewar5/Pick_me/1.png)
+
+마지막으로 착지 지역은, 마지막 로그인 5261번 로그를 통해 알 수 있으며 이는 아래와 같습니다.
+```
+5261
+00:02:55,508 --> 00:02:55,541
+<font size="28">FrameCnt: 5261, DiffTime: 33ms
+2025-08-05 13:47:21.183
+[iso: 160] [shutter: 1/1000.0] [fnum: 1.7] [ev: 0.7] [color_md: default] [focal_len: 24.00] [latitude: 46.799564] [longitude: -122.276379] [rel_alt: 4.000 abs_alt: 333.605] [ct: 5326] </font>
+```
+
+이를 구글 맵을 통해 검색하면, [해당 위치](https://www.google.com/maps?q=46.799564,-122.276379)와 같으며, 이는 아래의 그림과 같습니다.
+![image.png](../assets/img/2025_spacewar5/Pick_me/2.png)
+
+답: hspace{46.799564_-122.276379_Washington}
+
+
 
 ## Stealth_Signal
 
@@ -170,7 +228,7 @@ vg1 내에는 vg1-syno_vg_reserved_area와 vg1-volume_1이라는 논리 볼륨�
 
 마운트 후 휴지통에서 flag.txt 를 복구 할 수 있습니다.
 ![image.png](../assets/img/2025_spacewar5/Missing_Key/12.jpg)
-## 내 파일이... 안돼...
+## 내_파일이... 안돼...
 
 본 문제는 Hyper-V에서 동작하는 Windows 10 운영체제의 메모리를 분석하는 문제로 vmrs 파일을 통해 Hyper-V라는 것을 인지하고 MemProcFS 도구를 이용하여 메모리를 분석하는 문제입니다. 초기 침투로 메일 프로그램의 프로세스에서 메일 내용을 식별하고 첨부파일을 실행한 프로세스를 통해 첨부 파일의 원본을 메모리 덤프에서 추출하여 취약점 번호를 식별하는 문제가 포함됩니다. 취약점을 이해하고 해당 취약점을 통한 공격자의 공격 스크립트를 식별해야합니다. 분석하면서 식별한 C2 서버에 직접 접근하여 원본 바이너리를 수집 하고 분석을 진행할 수 있으며, 메모리 덤프파일에서는 프로세스가 존재해도 원본 실행파일을 수집할 수 없습니다. 사용된 랜섬웨어 파일을 리버싱하고 동작원리를 이해하며 암호화된 파일을 전부 복호화 하고 암호화된 파일이 몇 개인지 찾는 문제도 존재합니다.
 
