@@ -130,6 +130,46 @@ SQLite for DB Browser로 History 파일을 열어 ‘keyword_search_terms’ 테
 
 ## Missing_Key
 
+XPEnology 기반 가상 NAS에서 중요 문서 유출 정황이 발생했습니다. 시스템이 비정상 종료되었으며, 일부 공유 폴더가 암호화되었습니다. 포렌식 팀은 디스크 이미지 3개와 계정 정보를 확보했습니다. 해당 문제는 시놀로지 서버의 암호화된 폴더에서 파일을 복구하고 이를 통해 플래그 확보하는 문제입니다.
+
+`Missing_Key-0.vmdk`와 `Missing_Key-1.vmdk`라는 두 개의 VMware 가상 디스크 이미지 파일을 `qemu-nbd` 도구를 사용하여 리눅스 시스템에 네트워크 블록 디바이스(NBD)로 연결한합니다.
+이를통해 각각 `/dev/nbd0`와 `/dev/nbd1`이라는 가상 디스크 장치로 접근 가능합니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/1.jpg)
+
+`lsblk` 명령을 통해 연결된 디스크들의 파티션 구조를 확인합니다. 이를 통해 `/dev/nbd0p5`와 `/dev/nbd1p5` 파티션이 `md2`라는 RAID1 배열로 구성되어 있음을
+파악할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/2.jpg)
+
+mdadm 명령을 사용하여 md2 RAID1 배열을 조립하고, 이 RAID 배열 위에 구성된 vg1이라는 LVM(Logical Volume Manager) 볼륨 그룹을 vgchange -ay vg1 명령으로 활성화합니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/3.jpg)
+![image.png](../assets/img/2025_spacewar5/Missing_Key/4.jpg)
+
+vg1 내에는 vg1-syno_vg_reserved_area와 vg1-volume_1이라는 논리 볼륨이 존재함을 확인할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/5.jpg)
+
+활성화된 LVM 논리 볼륨 중 `vg1-volume_1`이 Synology NAS의 실제 데이터가 저장된 `btrfs` 파일 시스템임을 파악하고, 이를 `/mnt/synology_data` 디렉터리에 읽기 전용(`ro`)
+으로 마운트 그 결과 시놀로지 내부의 파일을 확인 할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/6.jpg)
+
+아래의 경로에서 SECRET.key 파일을 확인 할 수 있습니다. 해당 파일은 암호화 되어 있으며, KEY 자체를 추출해서 사용해도 됩니다. 하지만 해당 풀이 에서는 암호화 키 자체 복호화를 시도합니다.
+| DATA 공유 폴더 - 25-05-09 - WindowsFormsApp - WindowsFormsApp1 → SECRET.key |
+|---|
+
+아래 사진을 통해 암호화되어있는 키를 확인할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/7.jpg)
+
+시놀로지의 고정 passphrase를 가지고 있으며, PassPhrase는 아래와 같습니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/8.jpg)
+![image.png](../assets/img/2025_spacewar5/Missing_Key/9.jpg)
+
+마운트에 필요한`sig-pair.txt`에 직접 접근이 안되므로 `eCryptfs`를 마운트할 때 `ecryptfs_sig` 및 `ecryptfs_fnek_sig` 값을 직접 입력하는 대신, `eCryptfs`가 자동으로 키링에서 시그니처를 찾아 사용하도록 시도합니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/10.jpg)
+
+얻은 시그니처를 바탕으로 마운트에 필요한 정보를 얻는다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/11.jpg)
+
+마운트 후 휴지통에서 flag.txt 를 복구 할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Missing_Key/12.jpg)
 ## 내 파일이... 안돼...
 
 본 문제는 Hyper-V에서 동작하는 Windows 10 운영체제의 메모리를 분석하는 문제로 vmrs 파일을 통해 Hyper-V라는 것을 인지하고 MemProcFS 도구를 이용하여 메모리를 분석하는 문제입니다. 초기 침투로 메일 프로그램의 프로세스에서 메일 내용을 식별하고 첨부파일을 실행한 프로세스를 통해 첨부 파일의 원본을 메모리 덤프에서 추출하여 취약점 번호를 식별하는 문제가 포함됩니다. 취약점을 이해하고 해당 취약점을 통한 공격자의 공격 스크립트를 식별해야합니다. 분석하면서 식별한 C2 서버에 직접 접근하여 원본 바이너리를 수집 하고 분석을 진행할 수 있으며, 메모리 덤프파일에서는 프로세스가 존재해도 원본 실행파일을 수집할 수 없습니다. 사용된 랜섬웨어 파일을 리버싱하고 동작원리를 이해하며 암호화된 파일을 전부 복호화 하고 암호화된 파일이 몇 개인지 찾는 문제도 존재합니다.
@@ -573,3 +613,17 @@ if __name__ == '__main__':
 FLAG : HSPACE{CVE-2022-30190_5cr1pt.ps1_27_vmr5_i5_s0_d1ff1cult}
 
 ## HERE I AM
+
+랜섬웨어에 감염된 PC의 흔적 분석하는 문제입니다. 문제에서 사용된 악성코드를 실행하면, 드로퍼가 설치 -> 드로퍼가 안티포렌식 행위 진행 -> 랜섬웨어 설치 -> 랜섬웨어 실행순으로 진행됩니다. 서비스 사용 속성 변경, 파일 권한 변경, 레지스트리 삭제 등 다양한 안티포렌식 행위가 적용되어 있습니다. 한정된 아티팩트에서 악성코드를 실행 기록을 유추하는 것이 목표입니다.
+
+해당 문제를 풀기 위해서는 최초침투파일과 악성코드가 사용한 파일2개 마지막으로 Prefetch의 권한을 획득해야합니다.
+
+처음으로 최초 침투 파일을 확인하기 위하여 분석을 진행하면, 아래와 같이 분석 의뢰.hwp.exe파일을 발견할 수 있습니다. 해당 파일이 최초 침투 파일이며, 2025-09-16 AM 6:22:23에 실행되었다고 특정할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/HERE_I_AM/1.png)
+
+악성코드가 사용한 파일 2개를 획득하기 위해서는 Amcache 등 다양한 아티팩트를 확인할 수 있습니다. 하지만, 해당 이미지에서는 모든 파일이 암호화되거나, 드로퍼 악성코드에 의하여, 권한이 거부된 상태임으로, 공격자가 안티포렌식 행위를 하지 않아, 오염되지 않은 아티팩트를 식별해야합니다. 해당 증거에서는 `Windows Defender`, `$J`, `$Logfile`, `$MFT`  아티팩트가 오염되지 않은 것으로 확인할 수 있습니다. 
+
+이를 NTFS Log Tracker를 이용하여 분석한 후 DB Browser for Sqlite로 분석하면 아래와 같이, 분석 의뢰.exe.hwp가 실행되어 .pf파일이 생성된 후 Updater.exe와 bat.exe가 생성된 것을 확인할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/HERE_I_AM/2.png)
+
+
