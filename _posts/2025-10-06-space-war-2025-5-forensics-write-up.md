@@ -49,6 +49,24 @@ FLAG: HSPACE{z3774by73_fi13_5y573m_zz4n6}
 
 ## Insider's_Shadow
 
+문제로는 하이브 파일 5개가 주어집니다.
+![image.png](../assets/img/2025_spacewar5/Insider_Shadow/1.png)
+
+이 문제는 김영수 직원이 비정상적인 네트워크 연결을 통해 데이터를 전송했는지 조사하는 것으로, 레지스트리에서 네트워크 연결 기록을 분석해야 한다. REGA로 주어진 하이브 파일을 열면 다음과 같이 확인할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Insider_Shadow/2.png)
+
+네트워트 연결 기록은 다음 레지스트리에 저장됩니다.
+| 레지스트리 경로 | `SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles` |
+|------|-----|
+
+다음 경로로 이동하여 확인하면, 3개의 네트워크 연결 기록을 확인할 수 있으며, 각각 네트워크 이름, 최초 연결 시간, 마지막 연결 시각들을 확인할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/Insider_Shadow/3.png)
+
+사내에서 허용된 네트워크는 "forensics.lab"으로, 해당 네트워크는 “2025년 5월 9일 금요일 16:24:41”에 최초 연결되어 “2025년 9월 23일 화요일 23:02:59” 최근까지 정상적으로 이용되고 있었습니다.
+![image.png](../assets/img/2025_spacewar5/Insider_Shadow/4.png)
+
+네트워크 연결 기록을 분석한 결과, "Eden_iPhone"이라는 외부 네트워크 연결을 발견했습니다. 해당 네트워크는 2025년 9월 23일 22:35:04에 최초 연결된 것을 확인할 수 있으며, 이는 회사 내부에서 개인 iPhone 핫스팟으로 연결한 기록으로, 승인되지 않은 비정상적인 네트워크 연결에 해당합니다.
+![image.png](../assets/img/2025_spacewar5/Insider_Shadow/5.png)
 
 ## Pick Me !
 
