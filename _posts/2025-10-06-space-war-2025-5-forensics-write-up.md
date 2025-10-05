@@ -618,12 +618,67 @@ FLAG : HSPACE{CVE-2022-30190_5cr1pt.ps1_27_vmr5_i5_s0_d1ff1cult}
 
 해당 문제를 풀기 위해서는 최초침투파일과 악성코드가 사용한 파일2개 마지막으로 Prefetch의 권한을 획득해야합니다.
 
-처음으로 최초 침투 파일을 확인하기 위하여 분석을 진행하면, 아래와 같이 분석 의뢰.hwp.exe파일을 발견할 수 있습니다. 해당 파일이 최초 침투 파일이며, 2025-09-16 AM 6:22:23에 실행되었다고 특정할 수 있습니다.
+처음으로 최초 침투 파일을 확인하기 위하여 분석을 진행하면, 아래와 같이 분석 의뢰.hwp.exe파일을 발견할 수 있습니다. 해당 파일이 최초 침투 파일이며, 2025-09-16 AM 6:22:23에 실행되었다고 특정할 수 있습니다.<br>
 ![image.png](../assets/img/2025_spacewar5/HERE_I_AM/1.png)
 
 악성코드가 사용한 파일 2개를 획득하기 위해서는 Amcache 등 다양한 아티팩트를 확인할 수 있습니다. 하지만, 해당 이미지에서는 모든 파일이 암호화되거나, 드로퍼 악성코드에 의하여, 권한이 거부된 상태임으로, 공격자가 안티포렌식 행위를 하지 않아, 오염되지 않은 아티팩트를 식별해야합니다. 해당 증거에서는 `Windows Defender`, `$J`, `$Logfile`, `$MFT`  아티팩트가 오염되지 않은 것으로 확인할 수 있습니다. 
 
-이를 NTFS Log Tracker를 이용하여 분석한 후 DB Browser for Sqlite로 분석하면 아래와 같이, 분석 의뢰.exe.hwp가 실행되어 .pf파일이 생성된 후 Updater.exe와 bat.exe가 생성된 것을 확인할 수 있습니다.
+이를 NTFS Log Tracker를 이용하여 분석한 후 DB Browser for Sqlite로 분석하면 아래와 같이, 분석 의뢰.exe.hwp가 실행되어 .pf파일이 생성된 후 Updater.exe와 bat.exe가 생성된 것을 확인할 수 있습니다.<br>
 ![image.png](../assets/img/2025_spacewar5/HERE_I_AM/2.png)
+
+마지막으로, Prefetch의 권한을 확인해야합니다.
+이는 `$MFT`, `$Secure:$SDS`, `$Secure:$SDH` 파일로 3개가 필요합니다.
+
+권한을 확인하기 위하여 `$MFT`에서 Prefetch의 폴더를 찾습니다. 해당 증거의 경우, Prefetch의 이름이 하나가 존재하여 쉽게 찾을 수 있었습니다.
+이 후, $Standard_imporamtion(이하 $SIA)에서 보안 ID를 획득해야합니다. $SIA의 구조체는 아래와 같습니다.
+| 오프셋 | 크기 | 설명 |
+|--------|------|------|
+| 0x00 | 8 bytes | 속성 헤더 |
+| 0x08 | 8 bytes | 생성 시간 |
+| 0x10 | 8 bytes | 수정 시간 |
+| 0x18 | 8 bytes | MFT 수정 시간 |
+| 0x20 | 4 bytes | 접근 시간 |
+| 0x24 | 4 bytes | 속성 플래그 |
+| 0x28 | 4 bytes | 버전 최대값 |
+| 0x2C | 4 bytes | 버전 번호 |
+| 0x30 | 4 bytes | 클래스 ID |
+| 0x34 | 4 bytes | 소유자 ID |
+| 0x38 | 8 bytes | 보안 ID |
+| 0x40 | 8 bytes | Quota Charged |
+
+위의 표를 참고하여 찾으면 아래 사진과 같이 0x00000904의 보안 ID를 획득할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/HERE_I_AM/3.png)
+
+해당 보안 ID를 `$SDH`에 검색하여 보안 설명자 오프셋을 획득할 수 있습니다. 
+![image.png](../assets/img/2025_spacewar5/HERE_I_AM/4.png)
+
+이를 통해 해당 위치(0x186180)로 이동하여 보안 설명자를 분석할 수 있습니다.
+![image.png](../assets/img/2025_spacewar5/HERE_I_AM/5.png)
+
+보안 설명자는 헤더와 ACL(Access Control List), ACE(Access Control Entries)로 이루어져 있습니다. 헤더에는 사용자 SID의 주소, 그룹 SID의 주소 등의 정보를 포함하고 있다. 하지만 접근권한의 분석에서는 헤더의정보는 중요하지 않습니다. ACE에 접근권한에 대한 정보를 가지고 있습니다.
+
+이를 분석하면, 아래와 같이 나타낼 수 있습니다.
+
+ACE Type은 시스템의 보안을 보장하기 위한 장치이며, 보안 개체의 액세스할 수 있는 접근 권한을 소유하고있는지를 나타내며, 이는 아래 표와 같이 접근 허용, 접근 불가, 시스템 감사로 나뉩니다.
+| 값 | 설명 |
+|----|------|
+|0x00|접근이 허용됨|
+|0x01|접근 불가|
+|0x02|시스템 감사|
+
+액세스 마스크는 해당 ACE가 지원하는 액세스 권한에 해당하는 비트를 포함하는 32비트 값입니다. 액세스 마스크는 해당 32비트를 16진수로 변환하여 있습니다. 대표적인 액세스 마스크는 아래 표와 같이 정리할수 있습니다.
+| 권한 | Access Mask |
+|------|-------------|
+| Full | FF 01 F1 00 |
+| Modify | BF 01 13 00 |
+| Read & Write & Execute | BF 01 12 00 |
+| Read & Write | 9F 01 12 00 |
+| Write | 12 01 10 00 |
+| Read & Execute | A9 00 12 00 |
+| Read | 89 00 12 00 |
+
+이를 통해 프리패치는 접근이 불가하게 되어 있으며, 읽기와 실행 권한이 없는 것으로 확인되었습니다.
+
+답: HSPACE{분석 의뢰.hwp.exe_bat.exe_Updater.exe_0xA9001200}
 
 
