@@ -15,9 +15,9 @@ image: /assets/img/2025_spacewar5/thumbnail.jpg
 
 - [목차](#목차)
 - [Flag 대신 Flax?](#Flag_대신_Flax?)
-- [Insider's Shadow](#Insider's_Shadow)
-- [Pick Me !](#Pick Me !)
-- [Stealth Signal](#Stealth Signal)
+- [Insiders_Shadow](#Insiders_Shadow)
+- [Pick Me !](#Pick_Me_!)
+- [Stealth_Signal](#Stealth_Signal)
 - [Can you recovery SQLite?-?](#Can you recovery SQLite?-?)
 - [Missing_Key](#Missing_Key)
 - [내 파일이... 안돼...](#내 파일이... 안돼...)
@@ -47,7 +47,7 @@ zfs clone ctf@hspace ctf/hspace 를 통해 삭제된 flag를 찾을 수 있습�
 
 FLAG: HSPACE{z3774by73_fi13_5y573m_zz4n6}
 
-## Insider's_Shadow
+## Insiders_Shadow
 
 문제로는 하이브 파일 5개가 주어집니다.
 ![image.png](../assets/img/2025_spacewar5/Insider_Shadow/1.png)
@@ -68,9 +68,9 @@ FLAG: HSPACE{z3774by73_fi13_5y573m_zz4n6}
 네트워크 연결 기록을 분석한 결과, "Eden_iPhone"이라는 외부 네트워크 연결을 발견했습니다. 해당 네트워크는 2025년 9월 23일 22:35:04에 최초 연결된 것을 확인할 수 있으며, 이는 회사 내부에서 개인 iPhone 핫스팟으로 연결한 기록으로, 승인되지 않은 비정상적인 네트워크 연결에 해당합니다.
 ![image.png](../assets/img/2025_spacewar5/Insider_Shadow/5.png)
 
-## Pick Me !
+## Pick_Me_!
 
-## Stealth Signal
+## Stealth_Signal
 
 ## Can you recovery SQLite?-?
 
@@ -127,6 +127,7 @@ SQLite의 journal은 4 Byte의 Page Number 이후 0x1000 바이트크기로 백�
 
 SQLite for DB Browser로 History 파일을 열어 ‘keyword_search_terms’ 테이블 정보를 확인해 FLAG를 획득할 수 있습니다.
 ![image.png](../assets/img/2025_spacewar5/Can_you_recovery_SQLite/12.png)
+
 ## Missing_Key
 
 ## 내 파일이... 안돼...
