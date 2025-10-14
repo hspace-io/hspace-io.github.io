@@ -18,7 +18,7 @@ image: /assets/img/2025_spacewar5/thumbnail.jpg
 - [Insiders_Shadow](#Insiders_Shadow)
 - [Pick_Me_!](#Pick_Me_!)
 - [Stealth_Signal](#Stealth_Signal)
-- [Can you recovery SQLite?-?](#Can you recovery SQLite?-?)
+- [Can_you_recovery_SQLite?-?](#Can_you_recovery_SQLite?-?)
 - [Missing_Key](#Missing_Key)
 - [내_파일이... 안돼...](#내_파일이...안돼...)
 - [HERE I AM](#HERE I AM)
@@ -131,7 +131,96 @@ print(f"Map saved: drone_map.html ({len(coords)} points)")
 
 ## Stealth_Signal
 
-## Can you recovery SQLite?-?
+본 문제는 Signal 메신저의 암호화된 SQLite 데이터베이스를 복호화하여 FLAG를 찾는 포렌식 문제입니다. Signal은 AES-256-GCM 방식으로 메시지를 암호화하므로 단순 접근으로는 복호화가 불가능합니다.
+config.json의 encryptedKey와 Local State의 Master Key를 추출하고, Mimikatz로 사용자 정보(사용자명, NTLM 해시, SID)를 수집합니다. NTLM 해시를 크래킹하여 평문 비밀번호를 획득한 후, DPAPI 복호화를 통해 Master Key를 얻습니다. 이를 활용해 AES-256-GCM 복호화를 수행하여 SQLCipher DB의 최종 복호화 키를 생성합니다.
+복호화된 DB의 messages 테이블에서 대화내역과 FLAG 일부를, edit_messages 테이블에서 수정된 메시지를 추적하여 나머지 FLAG를 획득합니다. Signal 암호화 메커니즘, DPAPI, AES-GCM, SQLCipher 분석 기술이 요구됩니다.
+
+Signal 메신저는 보안을 위해 메시지를 AES-256-GCM 방식으로 암호화된 SQLite DB에 저장합니다. 단순 접근만으로는 복호화가 불가능하며, 아래의 과정을 통해 복호화를 진행합니다.
+
+Signal DB 복호화에는 2개의 키 정보가 필요합니다.
+| 이름 | 위치 |
+|------|------|
+|encryptedKey|config.json|
+|Master Key| Local State|
+
+config.json 분석은 아래와 같이 진행할 수 있으며, config.json에 위치된 encryptedKey는 아래 사진과 같습니다.
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/1.png)
+
+|encryptedKey 원본 값| 7631306b63f47c0fc677e5246764d4cf63dd59e674f5f37e11 c43f331c847869b64bd84324e5cfb60a06fcf3055afa956931471026c25c65dbae3d219a24ee6e3d067911157627427c1cc298db0a58fa7ad268136a48534b31c9a5b40656d9|
+|--|--|
+
+config.json 내부의 encryptedKey는 AES-GCM 형식으로 구성되어 있으며, 4가지 요소로 분
+리됩니다.
+|버전 정보|포맷 버전|763130|
+|--------|---------|-------|
+|IV|초기화벡터 (12바이트)|6b63f47c0fc677e5246764d4|
+|Ciphertext| 암호화된 실제 데이터|cf63dd59e674f5f37e11c43f331c847869b64bd84324e5cfb60a06fcf3055afa956931471026c25c65dbae3d219a24ee6e3d067911157627427c1cc298db0a58|
+|GCM Tag|무결성 검증용 태그 (16바이트)|fa7ad268136a48534b31c9a5b40656d9|
+
+해당 정보를 확인 후, Local State에서 Master Key를 추출해야합니다 Local State에서 확인한 Master Key는 아래 사진과 같습니다.
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/2.png)
+
+|원본encryptedkey(base 인코딩)|RFBBUEkBAAAA0Iyd3wEV0RGMegDAT8KX6wEAAACebWN36zwyQYnr87r7znTIEAAAABIAAABDAGgAcgBvAG0AaQB1AG0AAAAQZgAAAAEA
+ACAAAAB6E4VFsOiBoSTGq+EIkEbjTvzhoWX/sYbXoY4PJ8imPwAAAAAOgAAAAAIAACAAAAA0izlSru2ERlw7DxVnAxAzqx5cCzl671x83U/4KG9xrzAAAAD8UoakpjWAK5Ojbt6pa4xkDjh+18Dvz4IJzfx6GZRMH8+JJ0GZOPQdWF6/srRq5xVAAAAA2+/coTW/bcCn8OZCnGeaY6EwIglrgwOprEB89m9qUqrdnEPXvnySrZHp7IjKE4UhNzqzTDWTZAc8UUq0343P4g==|
+|--|--|
+
+encrypted_key 값은 위의 사진과 같이 Base64 인코딩되어 있으므로, 먼저 디코딩하여 바이너리 형태로 변환하고 저장합니다.
+디코딩 후, 데이터는 ‘DPAPI’라는 5바이트 헤더로 시작합니다. 따라서 복호화 전 DPAPI 헤더를 제거해야 합니다. 
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/3.png)
+
+DPAPI 복호화를 위해서는 사용자 고유 정보가 필요합니다. 아래 단계에서 순차적으로 정보를 수집하고 활용합니다.
+- 사용도구 : Mimikatz
+사용자 이름과 NTLM 해시는 Mimikatz의 lsadump::sam 명령을 통해 얻을 수 있습니다.
+```lsadump::sam /system:SYSTEM /sam:SAM```
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/4.png)
+
+|User|KANG|
+|----|----|
+|NTLM Hash|dfedd39da40315b7d0e40edf4ee546d2|
+|SID|S-1-5-21-2981898709-1383331904-3076336691-1001|
+NTLM 해시는 해당 계정의 로그인 비밀번호를 해시화한 값으로, NTLM 해시로부터 평문 비밀번호(로그인 패스워드)를 획득합니다.
+|passwd|hwhack|
+|----|------|
+
+사용자 정보를 사용해 DPAPI로 암호화된 Master Key를 복호화합니다. 
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/7.png)
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/8.png)
+
+|User|KANG|
+|----|----|
+|SID|S-1-5-21-2981898709-1383331904-3076336691-1001|
+|passwd|hwhack|
+|Master Key|da1c0d521dca2950769383dacf578d125727e4a89a9df4979dc2177eaf9e23bd2a9edd59f4ec141ba78cf8b516a164bb949e4fd2922bc157ac64fc1a2dc4043d|
+
+이후 DPAPI Master Key 복호화를 진행해야합니다.
+Local State 파일의 encrypted_key는 DPAPI로 암호화되어 있습니다. 앞서 얻은 Master Key를 사용하면, 최종적으로 DB 복호화에 필요한 hex 데이터(DATA) 를얻을 수 있습니다.
+|DATA|80282eccd4e799cebd27a96a6e802d81ff8feda59f659b460783cc47cbb05c64|
+|---|----|
+
+최종 DB 복호화 키 획득을 위해서는 다음과 같이 진행해야합니다.
+앞서 추출한 encryptedKey는 AES-256-GCM 형식으로 암호화되어 있으며, 이를 Master Key로 복호화하면 내부 데이터 키(DATA)를 획득할 수 있습니다. 이후 사용자 정보(User, SID, Password)와 함께 확보한 Master Key를 기반으로AES-256-GCM 복호화를 수행하여, SQLCipher DB를 열 수 있는 최종 복호화 키를 산출합니다.
+
+|User|KANG|
+|----|----|
+|SID|S-1-5-21-2981898709-1383331904-3076336691-1001|
+|passwd|hwhack|
+|Master Key|da1c0d521dca2950769383dacf578d125727e4a89a9df4979dc2177eaf9e23bd2a9edd59f4ec141ba78cf8b516a164bb949e4fd2922bc157ac64fc1a2dc4043d|
+|DATA|80282eccd4e799cebd27a96a6e802d81ff8feda59f659b460783cc47cbb05c64|
+
+복호화키는 다음과 같습니다.
+|DB 복호화 키| c5458a921e0b7bfbc7e96605b4ab036b64c9f74c68f3960151aae0d4f65dac23|
+|---|---|
+
+최종 AES 복호화 키를 SQLCipher 환경에 입력해 암호화된 DB를 정상적으로 열 수 있습니다.
+
+플레그는 총 2개의 파트로 나뉘어 있습니다.
+첫 부분은 사용자의 대화내역은 messages 테이블의 body 컬럼에 저장되어 있으며, fts_messages 테이블에서도 확인할 수 있습니다. 이를 통해 대화내역을 조회할 수 있으며, 2번째 플래그 조각을 확인 가능합니다.
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/11.png)
+
+두 번째 부분은 edit_messages 테이블에서는 메시지의 수정 여부를 확인할 수 있고, 수정된 메시지의 id를통해 messages 테이블의 json → body 컬럼에서 수정된 내용을 확인할 수 있습니다. 
+![image.png](../assets/img/2025_spacewar5/Stealth_Signal/12.png)
+
+## Can_you_recovery_SQLite?-?
 
 본 문제는 Chrome 브라우저의 History 파일에서 Secure-Delete 방식으로 삭제된 검색 기록을 복원하는 문제입니다. Chrome은 SQLite의 Truncate 저널 모드를 사용하기 때문에, 일반적인 journal 파일 분석만으로는 삭제된 데이터를 복구할 수 없습니다. 따라서 NTFS 파일 시스템의 $LogFile을 분석하여, 삭제되기 전 History-journal 파일의 RunList 정보를
 역추적하고, 이를 통해 비할당 영역에 남아 있는 데이터 페이지를 식별한다. 복원 대상은 keyword_search_terms 테이블이며, SQLite 구조를 이해하고 Page 단위 백업 방식, MFT Entry 구조, Redo/Undo 로그 파싱 등의 기술이 요구됩니다. 복원한 Page를 원본 History 파일에 덮어쓴 후, SQLite DB Browser를 통해 테이블을 확인하고 최종적으로 삭제 전 검색
