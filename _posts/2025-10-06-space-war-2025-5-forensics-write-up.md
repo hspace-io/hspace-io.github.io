@@ -21,7 +21,7 @@ image: /assets/img/2025_spacewar5/thumbnail.jpg
 - [Can_you_recovery_SQLite?-?](#Can_you_recovery_SQLite?-?)
 - [Missing_Key](#Missing_Key)
 - [내_파일이... 안돼...](#내_파일이...안돼...)
-- [HERE I AM](#HERE I AM)
+- [HERE I AM](#HERE_I_AM)
 
 ## Flag_대신_Flax?
 
@@ -760,7 +760,7 @@ if __name__ == '__main__':
 
 FLAG : HSPACE{CVE-2022-30190_5cr1pt.ps1_27_vmr5_i5_s0_d1ff1cult}
 
-## HERE I AM
+## HERE_I_AM
 
 랜섬웨어에 감염된 PC의 흔적 분석하는 문제입니다. 문제에서 사용된 악성코드를 실행하면, 드로퍼가 설치 -> 드로퍼가 안티포렌식 행위 진행 -> 랜섬웨어 설치 -> 랜섬웨어 실행순으로 진행됩니다. 서비스 사용 속성 변경, 파일 권한 변경, 레지스트리 삭제 등 다양한 안티포렌식 행위가 적용되어 있습니다. 한정된 아티팩트에서 악성코드를 실행 기록을 유추하는 것이 목표입니다.
 
