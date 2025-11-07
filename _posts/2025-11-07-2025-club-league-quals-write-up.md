@@ -2,7 +2,7 @@
 title: 2025 Club League Quals Writeup
 description: 2025 Club League 예선 전체 문제 풀이입니다.
 author: HSPACE
-date: 2025-11-07 20:00:00 +0900
+date: 2025-11-06 00:00:00 +0900
 tags: [Tech, CTF]
 categories: [Tech, CTF]
 math: true
@@ -3735,5 +3735,6 @@ flag : hspace{ah..ah.. miiiiic ch3ck!}
 #### Capture The QR!
 
 잘라놓은 QR코드가 제공되는데, 이미지 편집 도구를 이용해서 원본 QR에 맞게 복구해주면 됩니다.
+
 
 flag : hspace{24a29c54a2f}
