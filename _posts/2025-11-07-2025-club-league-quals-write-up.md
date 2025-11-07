@@ -2215,7 +2215,7 @@ flag : hspace{df9eb31cba6204cda2457429bf224ea6}
 
 유저는 1 이더로 시작을 하고, Setup 컨트렉트에서 100 * 10**18 USDH 를 claim할 수 있다.
 
-```solidity
+```js
     function solve() public {
         bytes32[] memory markets = new bytes32[](4);
         markets[0] = dex.ETH_USD_MARKET();
@@ -2238,7 +2238,7 @@ flag : hspace{df9eb31cba6204cda2457429bf224ea6}
 
 HspacePerpDEX 컨트렉트에는 기능이 몇가지 있는데, 최대 1000배 레버리지로 수수료와 청산 없이 포지션을 열고 닫을 수 있다. 여기서는 따로 의도한 취약점은 없고, 가격을 받아오는 부분을 살펴보자. 
 
-```solidity
+```js
     function updatePrices(
         bytes32[] calldata marketIds,
         uint256[] calldata newPrices
@@ -2799,7 +2799,7 @@ keyword
 랜덤함수는 SimpleVRF 컨트렉트를 사용하며, settleBet 함수 호출 시에 random 값이 결정된다. 
 blocktime이 1초로 설정되어있어 txpool 에서 랜덤값을 확인할 수 있지만, SETTLE_DELAY 이후에는 배팅을 취소할 수 없어 랜덤값 예측이 불가능하다.
 
-```solidity
+```js
     function cancelBet() external onlyEOA {
         PendingBet storage p = pendingBetOf[msg.sender];
         require(p.exists, "NO_BET");
@@ -2810,13 +2810,13 @@ blocktime이 1초로 설정되어있어 txpool 에서 랜덤값을 확인할 수
 ```
 하지만 cancelBet 함수에서는 배팅을 취소할 수 있는 한 가지 조건이 더 있다. EXPIRE_DELAY (5) 블록 이후에도 owner가 settleBet 함수를 호출하지 않으면 배팅을 취소할 수 있다. 하지만 해당 함수를 호출하는 파이썬 스크립트 상 이를 멈출 방법이 없고, settleBet 함수를 revert 시켜야하는데, `vrp.fulfill()` 함수에서 revert가 가능하다.
 
-```solidity
+```js
         require(r.exists, "no req");
         require(block.number >= r.targetBlock, "not ready");
 ```
 해당 함수는 r.targetBlock 또는 이후에 호출되어야하는데, 
 
-```solidity
+```js
     function request(uint64 delay) external {
         uint64 target = uint64(block.number) + delay;
         requestOf[msg.sender] = Request({targetBlock: target, exists: true});
@@ -2825,7 +2825,7 @@ blocktime이 1초로 설정되어있어 txpool 에서 랜덤값을 확인할 수
 ```
 request 함수에서 requestOf가 이미 존재하는지 검사하지 않아 targetBlock 값을 증가시켜 settleBet 함수를 revert 시킬 수 있다.
 
-```solidity
+```js
     function placeBet(uint8 betType, uint256 stake) external onlyEOA {
         require(betType <= 3, "BAD_BET");
         require(stake > 0, "ZERO_STAKE");
