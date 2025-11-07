@@ -3154,7 +3154,7 @@ TON smart contract의 assembly만 제공해주고 reverse engineering을 하는 
 
 모두가 Solidity, EVM을 오딧하지만 다른 ecosystem으로 이동하면 헷갈려하는 경우가 많기에 다른 ecosystem도 공부해보고 적응해보기를 바라는 마음으로 문제를 작성했습니다. 문제 description에 힌트는 많이 주어졌으니 TON에 해당하는 무슨 문제이구나 짐작할 수 있고 TVM assembly를 직접 보면서 분석해보면 됩니다.
 
-```C
+```c
 #include "imports/stdlib.fc";
 
 (slice) load_encrypted() inline {
