@@ -3730,7 +3730,246 @@ flag : hspace{ah..ah.. miiiiic ch3ck!}
 
 #### wordle
 
+wordle이란 알파벳 5글자로 이루어진 단어를 맞추는 게임입니다.
+
+5번의 기회가 주어지고, 플레이어가 제시한 단어 안에 그 알파벳이 존재하면 노란색, 정확한 위치에 있으면 초록색으로 표시됩니다.
+
+이 문제에서 구현된 wordle은 한 라운드 당 총 5번의 기회가 주어지고, 100라운드를 클리어하면 플래그를 얻을 수 있습니다.
+
+재미있는 점은 wordle은 게임 이론에서의 finite game이기 때문에 최적의 수를 구하여 3.4번의 기회로 클리어할 수 있습니다.
+
+자세한 설명은 [3blue1brown의 유튜브 영상](https://www.youtube.com/watch?v=v68zYyaEmEA)에서 확인할 수 있습니다.
+
+실제 익스플로잇 풀이를 작성할 때, 여러번 접속하여 단어를 추출하거나 미리 공개되어 있는 단어 파일들을 찾아서 구현하면 쉽게 풀 수 있습니다.
+
+출제자가 작성한 익스플로잇 코드는 다음과 같습니다.
+
+```python
+from pwn import *
+from collections import Counter
+context.log_level = "debug"
+
+with open("z-wordle-answers-alphabetical.txt") as f:
+    ANSWER_WORDS = [word.strip() for word in f.read().split(",")]
+with open("z-wordle-allowed-guesses.txt") as f:
+    GUESS_WORDS = [word.strip() for word in f.read().split(",")] + ANSWER_WORDS
+
+r = remote("localhost", 31337)
+
+MISS = 0
+CLOSE = 1
+MATCH = 2
+
+CACHE = {(): "calms", (0,0,0,0,0): "bento"}
+
+NON_ANSWER_PENALTY = 3
+
+
+def play(history, remaining_words, remaining_guess_words=GUESS_WORDS):
+    # history: a list of feedbacks, flattened
+    # feedback: a list of length 5, each element can be MISS, CLOSE, or MATCH
+    history_tuple = tuple(history)
+    if history_tuple in CACHE:
+        return CACHE[history_tuple]
+    
+    if len(remaining_words) <= 2:
+        return remaining_words[0]
+
+
+    key = lambda g: max(Counter(tuple(get_feedback(g, c)) for c in remaining_words).values()) + NON_ANSWER_PENALTY * bool(g not in ANSWER_WORDS)
+    ret = min(remaining_guess_words, key=key)
+    CACHE[history_tuple] = ret
+    return ret
+
+
+def filter_remaining_words(remaining_words, guess, feedback):
+    feedback = tuple(feedback)
+    return [word for word in remaining_words if tuple(get_feedback(guess, word)) == feedback]
+
+
+def get_feedback(guess, secret):
+    # Code from @didgogns, https://codegolf.stackexchange.com/a/242412/73123
+    taken = [False] * 5
+    result = [MISS] * 5
+    for i in range(5):
+        if guess[i] == secret[i]:
+            result[i] = MATCH
+            taken[i] = True
+    for i,c in enumerate(guess):
+        if result[i] == MATCH: continue
+        j = next((j for j, c2 in enumerate(secret) if not taken[j] and c == c2), None)
+        if j is not None:
+            result[i] = CLOSE
+            taken[j] = True
+    return result
+
+
+def get_feedback_from_color_string(string):
+    normal = '\x1b[37m'
+    green = '\x1b[32m'
+    yellow = '\x1b[33m'
+    end = '\x1b[0m'
+    
+    # Remove newline and split by end color code to get individual character segments
+    string = string.strip()
+    segments = string.split(end)
+    
+    result = []
+    for segment in segments:
+        if not segment:  # Skip empty segments
+            continue
+            
+        # Check which color code is present
+        if green in segment:
+            result.append(2)  # MATCH (green)
+        elif yellow in segment:
+            result.append(1)  # CLOSE (yellow)
+        elif normal in segment:
+            result.append(0)  # MISS (normal/white)
+    
+    return result
+
+def game():
+    history = []
+    remaining_words = ANSWER_WORDS
+    remaining_guess_words = GUESS_WORDS
+
+    while True:
+        r.recvuntil("Enter your guess: ")
+        guess = play(history, remaining_words, remaining_guess_words)
+        r.sendline(guess)
+        guess_result = r.recvline().decode()
+        if "Correct" in guess_result:
+            print(guess)
+            break
+        feedback = get_feedback_from_color_string(guess_result)
+        print(feedback)
+        history += feedback
+        remaining_words = filter_remaining_words(remaining_words, guess, feedback)
+    return history
+
+
+for i in range(101):
+    history = game()
+    print(history)
+    # print(len(history))
+
+r.interactive()
+```
+
+flag: hspace{830fc3076a183c74dfa2e053b689747f}
+
 #### warden
+
+문제 설명을 보면 마인크래프트 서버 접속 주소와 플러그인 파일인 jar 파일이 주어지는 것을 알 수 있습니다.
+
+jar 파일을 디컴파일하면 다음과 같은 플러그인 소스코드를 확인할 수 있습니다.
+
+```java
+    /*
+ * Decompiled with CFR 0.153-SNAPSHOT (d6f6758-dirty).
+ * 
+ * Could not load the following classes:
+ *  net.kyori.adventure.text.Component
+ *  org.bukkit.Bukkit
+ *  org.bukkit.Material
+ *  org.bukkit.entity.EntityType
+ *  org.bukkit.entity.Player
+ *  org.bukkit.event.EventHandler
+ *  org.bukkit.event.Listener
+ *  org.bukkit.event.entity.EntityDeathEvent
+ *  org.bukkit.event.player.PlayerJoinEvent
+ *  org.bukkit.inventory.ItemStack
+ *  org.bukkit.inventory.meta.ItemMeta
+ *  org.bukkit.plugin.Plugin
+ *  org.bukkit.plugin.java.JavaPlugin
+ */
+package org.hspace.miscwarden;
+
+import kotlin.Metadata;
+import kotlin.collections.CollectionsKt;
+import kotlin.jvm.internal.Intrinsics;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
+@Metadata(mv={2, 2, 0}, k=1, xi=48, d1={"\u0000$\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0002\b\u0003\n\u0002\u0010\u0002\n\u0002\b\u0003\n\u0002\u0018\u0002\n\u0000\n\u0002\u0018\u0002\n\u0000\u0018\u00002\u00020\u00012\u00020\u0002B\u0007\u00a2\u0006\u0004\b\u0003\u0010\u0004J\b\u0010\u0005\u001a\u00020\u0006H\u0016J\b\u0010\u0007\u001a\u00020\u0006H\u0016J\u0010\u0010\b\u001a\u00020\u00062\u0006\u0010\t\u001a\u00020\nH\u0007J\u0010\u0010\u000b\u001a\u00020\u00062\u0006\u0010\t\u001a\u00020\fH\u0007\u00a8\u0006\r"}, d2={"Lorg/hspace/miscwarden/Miscwarden;", "Lorg/bukkit/plugin/java/JavaPlugin;", "Lorg/bukkit/event/Listener;", "<init>", "()V", "onEnable", "", "onDisable", "onPlayerJoin", "event", "Lorg/bukkit/event/player/PlayerJoinEvent;", "onWardenDeath", "Lorg/bukkit/event/entity/EntityDeathEvent;", "misc_warden"})
+public final class Miscwarden
+extends JavaPlugin
+implements Listener {
+    public void onEnable() {
+        Bukkit.getPluginManager().registerEvents((Listener)this, (Plugin)this);
+        this.getLogger().info("Plugin misc warden enabled!");
+    }
+
+    public void onDisable() {
+    }
+
+    @EventHandler
+    public final void onPlayerJoin(@NotNull PlayerJoinEvent event) {
+        Intrinsics.checkNotNullParameter(event, "event");
+        event.getPlayer().sendMessage((Component)Component.text((String)("Hello, " + event.getPlayer().getName() + "!")));
+    }
+
+    @EventHandler
+    public final void onWardenDeath(@NotNull EntityDeathEvent event) {
+        ItemMeta itemMeta;
+        Intrinsics.checkNotNullParameter(event, "event");
+        if (event.getEntityType() != EntityType.WARDEN) {
+            return;
+        }
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) {
+            return;
+        }
+        Player player = killer;
+        ItemStack helmet = player.getInventory().getHelmet();
+        if (helmet == null || helmet.getType() != Material.CARVED_PUMPKIN) {
+            player.sendMessage("\u00a7cYou must wear a carved pumpkin on your head to claim the Warden's flag!");
+            return;
+        }
+        ItemStack flag = new ItemStack(Material.WHITE_BANNER, 1);
+        ItemMeta itemMeta2 = flag.getItemMeta();
+        if (itemMeta2 != null) {
+            ItemMeta itemMeta3;
+            ItemMeta $this$onWardenDeath_u24lambda_u240 = itemMeta3 = itemMeta2;
+            boolean bl = false;
+            $this$onWardenDeath_u24lambda_u240.setDisplayName("\u00a76Warden's Flag");
+            String[] stringArray = new String[]{"\u00a77A trophy from the depths.", "\u00a77Claimed while veiled in pumpkin disguise."};
+            $this$onWardenDeath_u24lambda_u240.setLore(CollectionsKt.listOf(stringArray));
+            itemMeta = itemMeta3;
+        } else {
+            itemMeta = null;
+        }
+        ItemMeta meta = itemMeta;
+        flag.setItemMeta(meta);
+        ItemStack[] itemStackArray = new ItemStack[]{flag};
+        player.getInventory().addItem(itemStackArray);
+        player.sendMessage("\u00a7aYou defeated the Warden while veiled in pumpkin! Here's your flag: hspace{test_flag}!");
+    }
+}
+```
+
+onWardenDeath 이벤트 핸들러를 보면 다음과 같은 조건을 만족하면 플레이어에게 플래그를 줍니다.
+1. 플레이어가 호박을 쓰고 있는지
+2. 플레이어가 워든을 처치한 경우
+
+워든은 서바이벌 모드로는 처치하기가 굉장히 어렵기에 난이도를 낮추기 위해 인벤세이브 및 xray 등을 허용하였습니다.
+
+또한, 같은 팀원들끼리 협력해서 워든을 처치하는 것 또한 가능했습니다.
+
+flag: hspace{4a11a5e15972a64212d9ec731532a5a4}
 
 #### Capture The QR!
 
