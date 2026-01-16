@@ -9,7 +9,7 @@ comments: false
 math: false
 mermaid: false
 pin: false
-image: 
+image: /assets/img/2025-macker/thumbnail.png
 ---
 ## **1. Intro (Project Overview)**
 
