@@ -1263,7 +1263,7 @@ Patch 방안 제안
 
 https://github.com/harfbuzz/harfbuzz/security/advisories/GHSA-xvjr-f2r9-c7ww
 
-제보 후 운이 좋게 취약점이 인정되어 CVE에 등록되었습니다. 
+제보 후 취약점이 인정되어 CVE에 등록되었습니다. 
 
 https://nvd.nist.gov/vuln/detail/CVE-2026-22693
 
