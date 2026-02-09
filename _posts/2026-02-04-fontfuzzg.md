@@ -1,32 +1,33 @@
 ---
-title: fuzznig 이용한 폰트 라이브러리 취약점 발견 및 분석
-description: HSPACE Knights Frontier의 폰트 라이브러리 취약점 리서치입니다
+title: 폰트 라이브러리 취약점 발견 및 분석 with Fuzzing
+description: HSPACE Knights Frontier의 폰트 라이브러리 취약점 연구 내용입니다.
 author: 이재영(Finder)
-date: 2025-09-16
-tags: [CTF]
-categories: [CTF]
+date: 2026-02-04
+tags: [Fuzzing, Font, CVE-2026-22693]
+categories: [Vulnerability Research, Fuzzing]
 math: true
 mermaid: false
 pin: false
-image:
----
-# fuzznig 이용한 폰트 라이브러리 취약점 발견 및 분석
-
-이번 글에서는 **LibFuzzer**를 이용하여 **FreeType**과 **HarfBuzz** 라이브러리를 대상으로 퍼징을 수행한 과정과, 그 과정에서 발견한 취약점을 자세히 정리해보도록 하겠습니다.
-해당 프로젝트는 HSPACE Knights Frontier 분들이 진행한 리서치이며, 박정우 님과 조준하 님께서 블로그를 작성해 주셨습니다.
+image: /assets/img/2026fontfuzzing/thumbnail.jpg
 ---
 
-# Part 1. FreeType DoS 취약점 발견 및 분석
+## 목차
+1. [Part 1. FreeType DoS 취약점 발견 및 분석](#part-1-freetype-dos-취약점-발견-및-분석)
+2. [Part 2. HarfBuzz Null Pointer Dereference 취약점 발견 및 분석](#part-2-harfbuzz-null-pointer-dereference-취약점-발견-및-분석)
 
-## The FreeType Project
 
-- [freetype.org](https://freetype.org/)
+이번 글에서는 **LibFuzzer**를 이용하여 **FreeType**과 **HarfBuzz** 라이브러리를 대상으로 퍼징을 수행한 과정과 발견한 취약점을 정리해 보겠습니다.
 
----
+해당 프로젝트는 HSPACE Knights Frontier 분들이 진행한 연구이며, 박정우님과 조준하님께서 본 글을 작성해 주셨습니다.
 
-## 1. 퍼징 타겟 선정 배경
+## Part 1. FreeType DoS 취약점 발견 및 분석
+
+
+### 1. 퍼징 타겟 선정 배경
 
 이번에 퍼징을 진행한 타겟은 **FreeType**이라는 라이브러리 프레임워크입니다.
+- The FreeType Project([freetype.org](https://freetype.org/))
+
 
 FreeType은 Android, Chrome, Linux 등 전 세계 수십억 대의 디바이스에서 폰트 렌더링을 담당하는 핵심 오픈소스 라이브러리로 알려져 있습니다. 다양한 폰트 포맷을 처리하면서 입력 데이터를 직접 파싱하고 복잡한 내부 로직을 수행하기 때문에, 오래전부터 많은 보안 연구자들이 집중적으로 취약점 분석을 진행해온 타겟 중 하나입니다.
 
@@ -34,50 +35,50 @@ FreeType은 Android, Chrome, Linux 등 전 세계 수십억 대의 디바이스�
 
 ---
 
-## 2. Attack Surface 분석
+### 2. Attack Surface 분석
 
 퍼징을 진행하기에 앞서, 저는 FreeType에 대한 Attack Surface 분석을 먼저 수행하였습니다. 분석 과정에서는 Codex를 활용하여 소스코드 전체 흐름을 확인하였고, 외부 입력(폰트 파일)이 깊게 전파되는 경로를 중심으로 Attack Surface를 다음과 같이 분류하였습니다.
 
-### (1) SFNT 기본 진입 경로
-- `FT_New_Memory_Face → sfnt_init_face → tt_face_load_font_dir`가 핵심 진입점입니다.  
+#### (1) SFNT 기본 진입 경로
+- `FT_New_Memory_Face → sfnt_init_face → tt_face_load_font_dir` 가 핵심 진입점입니다.  
 - 대부분의 TTF/OTF 폰트가 이 경로를 거치며, 이후 테이블 파싱 로직으로 분기됩니다.  
 - 실제로 가장 보편적이고 중요한 진입 경로이기 때문에 우선순위를 높게 두었습니다.
 
-### (2) 테이블 로딩(지연 로딩 구조)
+#### (2) 테이블 로딩(지연 로딩 구조)
 - `tt_face_load_*` 계열 함수에서 테이블별 파싱이 진행됩니다.  
 - 구조체 크기, 길이, 오프셋 검증이 제대로 되지 않는 경우 취약점이 발생하기 쉬운 구간입니다.
 
-### (3) CFF / CFF2 파서 및 로더
+#### (3) CFF / CFF2 파서 및 로더
 - INDEX 파싱과 CharString 인터프리터 로직이 존재합니다.  
 - 스택 기반 처리와 복잡한 파싱 흐름이 결합되어 있어 메모리 취약점 위험이 높은 구간으로 판단하였습니다.
 
-### (4) Variations(가변 폰트)
+#### (4) Variations(가변 폰트)
 - `fvar, avar, gvar, HVAR, VVAR` 등 다양한 테이블에서 좌표/델타 처리가 수행됩니다.  
 - 산술 연산이 빈번하고 범위 체크가 중요하기 때문에 정수 오버플로우나 검증 누락 가능성을 특히 주의해서 보았습니다.
 
-### (5) 컬러 폰트 경로
+#### (5) 컬러 폰트 경로
 - `COLR/CPAL/SVG/sbix` 등 컬러 폰트 관련 테이블 처리 경로입니다.  
 - 특히 SVG는 외부 파서와 연동될 가능성이 있어 공격 표면이 확장될 수 있다고 판단하였습니다.
 
-### (6) TrueType 힌팅/VM
+#### (6) TrueType 힌팅/VM
 - `fpgm, cvt, prep` 테이블 및 TrueType VM 실행 경로입니다.  
 - 연산량이 급격히 증가하여 timeout 기반의 DoS가 유발될 수 있는 민감한 구간입니다.
 
-### (7) Bitmap / Embedded 폰트
+#### (7) Bitmap / Embedded 폰트
 - `sbit, sbix` 등 비트맵 폰트 관련 경로입니다.  
 - 비교적 덜 주목되는 경로에서 예외 처리나 경계 조건 문제가 발생할 수 있다고 보았습니다.
 
-### (8) Type1 / CID / Type42
+#### (8) Type1 / CID / Type42
 - 포맷별 로더 경로가 별도로 존재하며, 파서/디코더에서 위험 지점이 존재할 수 있습니다.  
 - 상대적으로 퍼징 커버리지가 낮아질 수 있는 영역이라 별도로 고려하였습니다.
 
-### (9) 스트림 / 메모리 경계 처리
+#### (9) 스트림 / 메모리 경계 처리
 - 입력 길이, seek, read 실패 처리 등 공통적인 스트림 처리 구간입니다.  
 - OOB, NULL dereference 등 오류가 발생하기 쉬운 영역이어서 전체적으로 중요하게 보았습니다.
 
 ---
 
-## 3. 하네스 설계 방향
+### 3. 하네스 설계 방향
 
 위에서 정리한 Attack Surface를 최대한 폭넓게 커버하기 위해, 단순히 `FT_New_Memory_Face` 호출로 끝나는 형태가 아니라 여러 API 호출을 통해 다양한 경로를 실제로 실행하도록 하네스를 구성하였습니다.
 
@@ -594,7 +595,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
 ---
 
-## 4. Corpus 구성 전략
+### 4. Corpus 구성 전략
 
 퍼징 커버리지를 확장하는 데 있어 Corpus 구성은 매우 중요한 요소입니다. 저는 초기부터 높은 커버리지를 확보하기 위해, 공격 표면에 해당하는 다양한 폰트 파일들을 외부에서 다운로드하여 Seed Corpus를 구성하였습니다.
 
@@ -807,29 +808,29 @@ printf "\nSeed corpus created under %s\n" "$CORPUS_ROOT"
 
 ---
 
-## 5. Timeout 크래시 분석 (GDB 기반 원인 분석)
+### 5. Timeout 크래시 분석 (GDB 기반 원인 분석)
 
 그 결과, 퍼징 도중 timeout 로그가 출력되면서 특정 입력 파일이 크래시(정확히는 timeout artifact)로 저장되는 현상을 확인할 수 있었습니다.
 
 일반적인 메모리 크래시(SIGSEGV 등)와 달리, 프로세스가 특정 구간에서 과도하게 오래 실행되면서 응답하지 않는 형태였기 때문에, 단순한 크래시가 아니라 DoS 가능성을 의심하고 분석을 진행하였습니다.
 
-### 5.1. GDB로 확인한 실행 지점
+#### 5.1. GDB로 확인한 실행 지점
 
 생성된 timeout 입력을 대상으로 GDB를 붙여 실행 흐름을 추적해보았습니다. 분석 결과, 렌더링 단계에서 `ftgrays.c` 모듈의 특정 함수 내부에서 실행이 장시간 지연되고 있음을 확인하였습니다.
 
 특히 그레이스케일 래스터라이저 경로에서 호출되는 `gray_render_line` 함수가 지연의 중심이었습니다. 해당 함수는 라인(line)을 렌더링하는 과정에서 픽셀 단위로 한 칸씩 이동하며 반복 수행하는 구조를 가지고 있어, 입력 좌표가 비정상적으로 커질 경우 반복 횟수가 폭증할 수 있는 형태였습니다.
 
-### 5.2. Root Cause: 과도한 루프 반복과 클리핑/검증 부족
+#### 5.2. Root Cause: 과도한 루프 반복과 클리핑/검증 부족
 
-#### (1) gray_render_line의 픽셀 단위 반복 구조
+##### (1) gray_render_line의 픽셀 단위 반복 구조
 `gray_render_line`은 선을 그릴 때 시작점에서 끝점까지 x 좌표를 1씩 증가시키는 방식으로 반복을 수행합니다. 즉, "선 하나"를 그리더라도 내부적으로는 "픽셀 단위"로 계산이 누적되는 구조입니다.
 
-#### (2) 수평 클리핑 및 sanity check 부재
+##### (2) 수평 클리핑 및 sanity check 부재
 문제가 되었던 입력에서는 선의 목표 좌표(`to_x`)가 비정상적으로 큰 값으로 설정되어 있었습니다. 이 경우, 해당 선이 실제로는 화면 영역(혹은 렌더링 대상 영역) 밖에 존재하더라도, 함수 내부에서 이를 조기에 배제하지 못하고 끝까지 모든 픽셀을 계산하려고 시도하게 됩니다.
 
 즉, 수평 방향 클리핑(horizontal clipping) 또는 "좌표가 비정상적으로 큰 경우 early exit" 같은 sanity check가 부족한 상태로 보였습니다.
 
-#### (3) 알고리즘 복잡도 증가 (최악의 경우 O(N²) 양상)
+##### (3) 알고리즘 복잡도 증가 (최악의 경우 O(N²) 양상)
 또한 반복 루프 내부에서는 `gray_set_cell`과 같은 함수 호출이 연쇄적으로 발생하는데, 이 과정에서 내부 데이터 구조 처리 방식에 따라 선형 탐색이 반복되는 형태가 관찰되었습니다.
 
 결과적으로 입력 좌표가 커질수록,
@@ -843,17 +844,17 @@ GDB 스냅샷에서도 현재 위치(`ex1`) 대비 목표 좌표(`to_x`)가 매�
 
 ---
 
-## 6. 성능 비교 실험 (Proof of Concept)
+### 6. 성능 비교 실험 (Proof of Concept)
 
 이 문제가 실제로 얼마나 심각한지 확인하기 위해, 정상 폰트 파일과 퍼징으로 발견된 timeout 입력 파일을 대상으로 렌더링 시간을 비교 측정해보았습니다.
 
-정상 입력은 약 5~7ms 내외로 빠르게 종료되는 반면, 크래시 파일은 776.78초(약 12분 56초) 이상 실행이 지속되어 수동으로 중단해야 했습니다.
+정상 입력은 약 5~7ms 내외로 빠르게 종료되는 반면, 크래시 파일은 776.78초 (약 12분 56초) 이상 실행이 지속되어 수동으로 중단해야 했습니다.
 
 즉, 정상 대비 수십만 배 수준의 성능 저하가 발생한 것이며, 실제 서비스 환경(브라우저/서버/모바일 등)에서 해당 입력이 처리될 경우 심각한 서비스 거부 상황을 유발할 수 있습니다.
 
 ---
 
-## 7. 개발사 제보 및 패치 및 CVE 발급 진행 상황
+### 7. 벤더 제보, 패치 및 CVE 발급 진행 상황
 
 앞서 분석한 내용을 토대로, 해당 취약점에 대해 FreeType 개발사에 공식적으로 제보를 진행하였습니다. 제보 과정에서는 퍼징 환경, 재현 가능한 입력 파일, GDB 분석 결과, 그리고 성능 저하(DoS) 발생 원인을 함께 전달하였습니다.
 
@@ -865,7 +866,7 @@ GDB 스냅샷에서도 현재 위치(`ex1`) 대비 목표 좌표(`to_x`)가 매�
 
 ---
 
-## 8. FreeType 퍼징 후기
+### 8. FreeType 퍼징 후기
 
 이번에 처음으로 LibFuzzer라는 퍼저를 실제 퍼징에 활용해보았는데, 기존에 사용해왔던 AFL++ 계열 퍼저들과 비교했을 때 빌드 과정이 비교적 간단하고, 초기 설정 이후 곧바로 퍼징을 수행할 수 있다는 점이 매우 편리하게 느껴졌습니다. 특히 타겟이 라이브러리 형태일 경우, LibFuzzer의 장점이 더욱 잘 드러난다고 생각합니다.
 
@@ -877,11 +878,12 @@ GDB 스냅샷에서도 현재 위치(`ex1`) 대비 목표 좌표(`to_x`)가 매�
 
 ---
 
-# Part 2. HarfBuzz Null Pointer Dereference 취약점 발견 및 분석
+## Part 2. HarfBuzz Null Pointer Dereference 취약점 발견 및 분석
 
-## Target
+### Target
 
-개인적으로 퍼징을 진행할 때는 타겟이 어떤 기능이 있고 어떤 역할을 수행하는지에 대해 아는 것이 중요하다고 생각합니다. Harfbuzz는 어떤 역할을 하고 어떤 기능이 있는지 Docs를 통해 먼저 확인을 진행했습니다. 
+개인적으로 퍼징을 진행할 때는 타겟이 어떤 기능이 있고 어떤 역할을 수행하는지에 대해 아는 것이 중요하다고 생각합니다.
+Harfbuzz는 어떤 역할을 하고 어떤 기능이 있는지 Docs를 통해 먼저 확인을 진행했습니다. 
 
 ### Harfbuzz?
 
@@ -895,7 +897,7 @@ https://harfbuzz.github.io/
 
 ---
 
-## 1. Build
+### 1. Build
 
 https://harfbuzz.github.io/building.html#building.linux
 
@@ -936,23 +938,23 @@ prefix로 설정한 위치의 심볼을 확인한 결과 ASAN이 정상적으로
 
 ---
 
-## 2. Binary
+### 2. Binary
 
 빌드 완료 후 4개의 바이너리가 생성됩니다. 
 
-### hb-info
+#### hb-info
 
 기능: 폰트 파일의 내부 메타데이터 및 지원하는 기능을 조회
 
-### hb-shape
+#### hb-shape
 
 기능: 유니코드가 어떤 글리프 ID로 변환되었는지 각 글리프의 정확한 좌표와 간격 정보가 터미널에 수치로 표시
 
-### hb-view
+#### hb-view
 
 기능: 셰이핑된 결과를 시각적으로 렌더링하여 이미지 파일(PNG, SVG, PDF 등)로 출력
 
-### hb-subset
+#### hb-subset
 
 기능: 원본 폰트 파일에서 필요한 글리프만 추출하여 새로운 최적화된 폰트 파일을 생성
 
@@ -962,9 +964,9 @@ https://harfbuzz.github.io/utilities.html#utilities-command-line-tools
 
 ---
 
-## 3. Strategy
+### 3. Strategy
 
-### Fuzzer
+#### Fuzzer
 
 HarfBuzz의 취약점 탐색을 위해 LibFuzzer로 선택했습니다. 선정 사유는 다음과 같습니다.
 
@@ -972,7 +974,7 @@ HarfBuzz의 취약점 탐색을 위해 LibFuzzer로 선택했습니다. 선정 �
 - API 중심 테스트: HarfBuzz는 방대한 라이브러리 API로 구성되어 있어 특정 함수(`hb_shape`)를 직접 타겟팅하는 LibFuzzer의 하네스(Harness) 구조가 가장 적합합니다.
 - 효율적 커버리지 탐색: LLVM 컴파일러 인프라를 활용한 커버리지 가이드 방식을 통해 복잡한 폰트 파싱 로직의 깊은 곳까지 탐색 가능합니다.
 
-### Corpus
+#### Corpus
 
 HarfBuzz는 폰트와 유니코드를 입력으로 받습니다. 하지만 LibFuzzer는 입력값을 하나만 받을 수 있습니다. 폰트와 유니코드를 모두 사용한다면 더 높은 커버리지를 얻을 수 있을 것이라고 생각하여 두 가지를 모두 활용하고 싶었습니다.
 
@@ -989,11 +991,11 @@ HarfBuzz는 폰트와 유니코드를 입력으로 받습니다. 하지만 LibFu
 
 결국 폰트만 사용하는 전략을 선택했습니다.
 
-폰트는 GitHub Public 저장소를 크롤링하는 코드를 작성하여 ttf, ttc, otf, otc 확장자 파일을 수집했습니다. GitHub 저장소를 사용한 이유는 일반적으로 공개된 폰트를 사용할 경우 저작권 문제가 발생할 수 있기 때문에 자유롭게 사용 가능한 Public 저장소를 활용했습니다.
+폰트는 GitHub Public 저장소를 크롤링하는 코드를 작성해 ttf, ttc, otf, otc 확장자 폰트 파일을 수집했습니다. GitHub 저장소를 사용한 이유는 일반적으로 공개된 폰트를 사용할 경우 저작권 문제가 발생할 수 있기 때문에 자유롭게 사용 가능한 Public 저장소를 활용했습니다.
 
 ---
 
-## 4. Harness
+### 4. Harness
 
 본격적인 퍼징에 앞서 코드 오디팅을 진행했습니다. 코드 오디팅을 통해 코드의 이해도를 높이고 취약점이 존재할 수 있는 부분을 파악할 수 있기 때문입니다.
 
@@ -1080,7 +1082,7 @@ struct subset_main_t : option_parser_t, face_options_t, output_options_t<false>
 
 또는 전혀 감을 잡지 못하는 경우 AI를 활용하여 코드를 분석하기도 합니다. 최근 AI 기술이 발전하여 이 방법을 적극 활용하고 있습니다.
 
-### Flow
+#### Flow
 
 3개의 바이너리를 분석한 후 어떤 하네스를 작성할지 고민했습니다. 분석 결과 이 3가지를 유기적으로 연결할 수 있을 것 같다는 생각이 들었습니다. 이때까지만 해도 corpus를 2개 사용해도 될 것 같다고 생각하여 다음과 같은 흐름을 고려했습니다.
 
@@ -1117,13 +1119,13 @@ struct subset_main_t : option_parser_t, face_options_t, output_options_t<false>
 
 ---
 
-## 5. Start Fuzzing~
+### 5. Start Fuzzing~
 
 하네스를 작성한 후에는 컴파일을 진행했습니다. 
 
 > https://github.com/harfbuzz/harfbuzz/blob/main/test/fuzzing/meson.build
 
-해당 위치에 하네스를 컴파일할 수 있는 `meson.build` 파일이 존재하여 이 파일을 수정하여 진행했습니다. 
+해당 위치에 하네스를 컴파일할 수 있는 `meson.build` 파일이 있어 이 파일을 수정해 진행했습니다.
 
 ```cpp
 tests = [
@@ -1200,7 +1202,7 @@ ASAN_OPTIONS=detect_leaks=0 \
 
 ---
 
-## 6. Root Cause
+### 6. Root Cause
 
 크래시가 발생했고 이것이 하네스의 문제인지 실제 타겟의 크래시인지 확인하기 위해 먼저 스택 로그를 확인했습니다. 확인 결과 크래시는 타겟 소스코드 내에서 발생한 것으로 확인되어 본격적인 분석을 시작했습니다.
 
@@ -1227,7 +1229,7 @@ static SubtableUnicodesCache* create (hb_blob_ptr_t<cmap> source_table)
 
 ---
 
-## 7. Report
+### 7. Report
 
 GitHub에서 취약점을 제보하는 방법은 Security로 작성하거나 메일로 제보하는 방법이 있으며 전자를 사용하여 리포트를 작성했습니다.
 
@@ -1260,11 +1262,7 @@ Patch 방안 제안
 ```
 
 다음과 같은 형식에 맞춰 제보했습니다. 제보 내용이 궁금하시면 아래 링크에서 확인하실 수 있습니다.
-
-https://github.com/harfbuzz/harfbuzz/security/advisories/GHSA-xvjr-f2r9-c7ww
+- https://github.com/harfbuzz/harfbuzz/security/advisories/GHSA-xvjr-f2r9-c7ww
 
 제보 후 취약점이 인정되어 CVE에 등록되었습니다. 
-
-https://nvd.nist.gov/vuln/detail/CVE-2026-22693
-
----
+- https://nvd.nist.gov/vuln/detail/CVE-2026-22693
