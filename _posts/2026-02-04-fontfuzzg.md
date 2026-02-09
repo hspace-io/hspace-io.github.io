@@ -859,8 +859,7 @@ GDB 스냅샷에서도 현재 위치(`ex1`) 대비 목표 좌표(`to_x`)가 매�
 앞서 분석한 내용을 토대로, 해당 취약점에 대해 FreeType 개발사에 공식적으로 제보를 진행하였습니다. 제보 과정에서는 퍼징 환경, 재현 가능한 입력 파일, GDB 분석 결과, 그리고 성능 저하(DoS) 발생 원인을 함께 전달하였습니다.
 
 그 결과, 개발사 측에서도 해당 이슈를 Denial of Service 취약점으로 인정하였으며, 내부 검토 이후 패치가 실제로 진행되었습니다.
-
-- https://gitlab.freedesktop.org/freetype/freetype/-/issues/1381
+- [https://gitlab.freedesktop.org/freetype/freetype/-/issues/1381](https://gitlab.freedesktop.org/freetype/freetype/-/issues/1381)
 
 현재 해당 취약점에 대해서는 CVE 번호 발급을 신청한 상태이며, 대기 중에 있습니다.
 
@@ -887,9 +886,8 @@ Harfbuzz는 어떤 역할을 하고 어떤 기능이 있는지 Docs를 통해 �
 
 ### Harfbuzz?
 
-https://harfbuzz.github.io/
-
 이곳에서 HarfBuzz의 기능과 역할을 확인할 수 있습니다.
+- [https://harfbuzz.github.io](https://harfbuzz.github.io)
 
 > HarfBuzz는 텍스트 형태 변환 엔진으로, 폰트와 유니코드를 입력받아 해당 폰트에 대응하는 글리프(Glyph)를 선택하고 배치하며, 모든 레이아웃 규칙과 폰트 기능을 적용합니다. 그 후 해당 언어와 문자 체계에 맞춰 배열된 문자열을 반환하는 프로그램입니다.
 
@@ -899,9 +897,8 @@ https://harfbuzz.github.io/
 
 ### 1. Build
 
-https://harfbuzz.github.io/building.html#building.linux
-
 문서에 필요한 의존성이 명시되어 있어 해당 내용을 따라 진행했습니다.
+- [https://harfbuzz.github.io/building.html#building.linux](https://harfbuzz.github.io/building.html#building.linux)
 
 ```bash
 sudo apt install  gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev
@@ -958,9 +955,8 @@ prefix로 설정한 위치의 심볼을 확인한 결과 ASAN이 정상적으로
 
 기능: 원본 폰트 파일에서 필요한 글리프만 추출하여 새로운 최적화된 폰트 파일을 생성
 
-https://harfbuzz.github.io/utilities.html#utilities-command-line-tools
-
-더 자세한 사용 방법은 위 링크를 참고하시기 바랍니다. 
+더 자세한 사용 방법은 다음 링크를 참고하시기 바랍니다. 
+- [https://harfbuzz.github.io/utilities.html#utilities-command-line-tools](https://harfbuzz.github.io/utilities.html#utilities-command-line-tools)
 
 ---
 
@@ -1127,7 +1123,7 @@ struct subset_main_t : option_parser_t, face_options_t, output_options_t<false>
 
 해당 위치에 하네스를 컴파일할 수 있는 `meson.build` 파일이 있어 이 파일을 수정해 진행했습니다.
 
-```cpp
+```bash
 tests = [
   'hb-shape-fuzzer.cc',
   'hb-subset-fuzzer.cc',
@@ -1262,7 +1258,6 @@ Patch 방안 제안
 ```
 
 다음과 같은 형식에 맞춰 제보했습니다. 제보 내용이 궁금하시면 아래 링크에서 확인하실 수 있습니다.
-- https://github.com/harfbuzz/harfbuzz/security/advisories/GHSA-xvjr-f2r9-c7ww
+- [https://github.com/harfbuzz/harfbuzz/security/advisories/GHSA-xvjr-f2r9-c7ww](https://github.com/harfbuzz/harfbuzz/security/advisories/GHSA-xvjr-f2r9-c7ww)
 
-제보 후 취약점이 인정되어 CVE에 등록되었습니다. 
-- https://nvd.nist.gov/vuln/detail/CVE-2026-22693
+제보 후 취약점이 인정되어 [CVE-2026-22693](https://nvd.nist.gov/vuln/detail/CVE-2026-22693)에 등록되었습니다.
