@@ -1176,7 +1176,7 @@ GAP가 conv weight 변경 효과를 $1/(HW)$ 로 희석하므로, 후반 layer (
 ### 체크리스트
 
 - 반드시 `model.eval()` 모드. 학습 중 미니배치 통계량을 쓰면 서버와 결과가 갈립니다.
-- $|\hat{W}_{2,ij}|$ 가 큰 위치는 $1 - \tanh^2 \approx 0$ 라 gradient가 소실되니, fc2 후보 자체가 안 뜹니다.
+- $\lvert \hat{W}_{2,ij} \rvert$ 가 큰 위치는 $1 - \tanh^2(\hat{W}_{2,ij}) \approx 0$ 이라 gradient가 소실되니, fc2 후보 자체가 안 뜹니다.
 
 ### Solve
 
