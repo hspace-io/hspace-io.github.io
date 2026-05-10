@@ -1176,7 +1176,12 @@ GAP가 conv weight 변경 효과를 $1/(HW)$ 로 희석하므로, 후반 layer (
 ### 체크리스트
 
 - 반드시 `model.eval()` 모드. 학습 중 미니배치 통계량을 쓰면 서버와 결과가 갈립니다.
-- $\lvert \hat{W}_{2,ij} \rvert$ 가 큰 위치는 $1 - \tanh^2(\hat{W}_{2,ij}) \approx 0$ 이라 gradient가 소실되니, fc2 후보 자체가 안 뜹니다.
+- fc2 의 raw weight 절댓값이 큰 위치는 tanh saturation 때문에 gradient가 0에 가까워져, fc2 후보 자체가 거의 잡히지 않습니다. 즉 다음 식이 성립합니다.
+
+$$
+\frac{\partial}{\partial \hat{W}_{2,ij}} \big( \tanh(\hat{W}_{2,ij}) \cdot s \big)
+= s \cdot \big(1 - \tanh^2(\hat{W}_{2,ij})\big) \;\approx\; 0
+$$
 
 ### Solve
 
