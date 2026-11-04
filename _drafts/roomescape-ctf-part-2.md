@@ -10,6 +10,7 @@ math: false
 mermaid: false
 pin: false
 toc: false
+image: /assets/img/room-escape-ctf/thumbnail-part-2.jpg
 ---
 
 > 이 연재는 1편 **기획과 준비**, 2편 **메인 의뢰**, 3편 **추가 의뢰**로 구성됩니다. [1편: 기획과 준비](/posts/roomescape-ctf-part-1/) · [3편: 추가 의뢰](/posts/roomescape-ctf-part-3/)
