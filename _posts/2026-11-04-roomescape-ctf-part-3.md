@@ -953,6 +953,8 @@ if __name__ == "__main__":
     main()
 ```
 
+위 코드가 import하는 `recover_format.py`와 `synthesize_collision_net.py`는 [GitHub 저장소](https://github.com/GEONWOOHAN/room_escape_ctf/tree/main/sub_scene/rev_phantom-frame/for_admin/solution)에서 확인할 수 있습니다.
+
 ### 2.7 고양이는 자고 있었는데 참치는 누가 먹었죠?
 
 | 항목 | 내용 |
@@ -960,7 +962,7 @@ if __name__ == "__main__":
 | 의뢰인 | `EMPTY_BOWL` |
 | 분야 | Web |
 | 난이도 | 하 |
-| 제공 파일 | 실제 플래그만 더미로 치환한 `app.py` |
+| 제공 파일 | 플래그를 더미로 치환한 단일 `app.py`(템플릿·정적 리소스 제외) |
 | 초기 계정 | `guest / guest` |
 | 핵심 원리 | 사용자 입력을 직접 이어 붙인 로그인 SQL 쿼리 |
 | 목표 | 로그인 SQL Injection으로 운영자 전용 사건 정보 확인 |
