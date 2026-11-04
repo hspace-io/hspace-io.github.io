@@ -1,0 +1,29 @@
+// Styles for the escape-room CTF overview article only.
+.content:has(img[src$="/room-escape-ctf/overview/20-event-poster.jpg"]) {
+  .figure-caption, .figure-caption p {
+    text-align: center;
+  }
+  .uosint-example {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin: 24px 0 0;
+
+    .img-link { display: block; width: 100%; }
+    img { display: block; width: 100%; height: auto; margin: 0; left: auto; transform: none; }
+    p { margin: 8px 0 0; text-align: center; font-size: .9rem; color: var(--text-muted-color); }
+  }
+  img[src$="/20-event-poster.jpg"] {
+    display: block;
+    width: 460px;
+    max-width: 100%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  img[src*="/room-escape-ctf/overview/"][src*="event-photo-"] {
+    max-height: 680px;
+    width: auto;
+    max-width: 100%;
+  }
+}
